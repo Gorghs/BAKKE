@@ -4,19 +4,19 @@ include .env
 export
 
 api:
-	@cd backend && ../.venv/bin/uvicorn app.main:app --reload --port 8000
+	@cd apps/backend && ../../.venv/bin/uvicorn app.main:app --reload --port 8000
 
 worker:
-	@cd backend && ../.venv/bin/python -m app.jobs.worker
+	@cd apps/backend && ../../.venv/bin/python -m app.infrastructure.jobs.worker
 
 seed:
-	@cd backend && ../.venv/bin/python -m scripts.seed_demo
+	@cd apps/backend && ../../.venv/bin/python -m scripts.seed_demo
 
 migrate:
-	@cd backend && ../.venv/bin/alembic upgrade head
+	@cd apps/backend && ../../.venv/bin/alembic upgrade head
 
 test:
-	@cd backend && ../.venv/bin/python -m pytest -q
+	@cd apps/backend && ../../.venv/bin/python -m pytest -q
 
 reset: down
 	docker compose down -v

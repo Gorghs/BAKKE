@@ -11,11 +11,12 @@ ones that violate hard constraints via adversarial review, ranks the survivors b
 ## Stack
 
 ```
-backend/          FastAPI + SQLAlchemy 2.0 + Alembic + background worker (Redis/DB)
-frontend/         Next.js 14 (App Router) + TypeScript + Tailwind + TanStack Query
+apps/backend/     FastAPI + SQLAlchemy 2.0 + Alembic + background worker (Redis/DB)
+apps/frontend/    Next.js 14 (App Router) + TypeScript + Tailwind + TanStack Query
+docs/             documentation (architecture, api, database, setup, testing, ...)
+scripts/          repo-level launchers (seed_demo)
 data/             runtime uploads / videos (gitignored, docker volume)
 docker-compose.yml
-*.md              documentation (ARCHITECTURE, API, DATABASE, SETUP, TESTING, ...)
 ```
 
 ## Quick start (Docker)
@@ -49,14 +50,14 @@ POST /api/cases/{id}/analyze        # runs on the worker
 
 ```bash
 # backend (Python 3.12+)
-cd backend
-python -m venv ../.venv && ../.venv/bin/pip install -r requirements.txt
-../.venv/bin/alembic upgrade head
-../.venv/bin/uvicorn app.main:app --port 8000     # API
-../.venv/bin/python -m app.jobs.worker            # worker (second shell)
+cd apps/backend
+python -m venv ../../.venv && ../../.venv/bin/pip install -r requirements.txt
+../../.venv/bin/alembic upgrade head
+../../.venv/bin/uvicorn app.main:app --port 8000     # API
+../../.venv/bin/python -m app.infrastructure.jobs.worker            # worker (second shell)
 
 # frontend (Node 20+)
-cd frontend
+cd apps/frontend
 npm install
 npm run dev
 ```
@@ -64,17 +65,17 @@ npm run dev
 ## Tests
 
 ```bash
-cd backend && DATABASE_URL="sqlite:///:memory:" ../.venv/bin/python -m pytest tests/ -q
+cd apps/backend && DATABASE_URL="sqlite:///:memory:" ../../.venv/bin/python -m pytest tests/ -q
 ```
 
-23 tests, no services or API keys needed. See `TESTING.md`.
+23 tests, no services or API keys needed. See `docs/testing.md`.
 
 ## Documentation
 
-- `ARCHITECTURE.md` — pipeline, agents, key design decisions
-- `API.md` — endpoint reference
-- `DATABASE.md` — schema, migrations, conventions
-- `VIDEO_PIPELINE.md` — visual-only spec + renderer isolation
-- `RESEARCH_NOTES.md` — principles, score semantics, limitations
-- `SETUP.md` — full configuration reference
+- `docs/architecture.md` — pipeline, agents, key design decisions
+- `docs/api.md` — endpoint reference
+- `docs/database.md` — schema, migrations, conventions
+- `docs/video-pipeline.md` — visual-only spec + renderer isolation
+- `docs/research-notes.md` — principles, score semantics, limitations
+- `docs/setup.md` — full configuration reference
 - `AGENTS.md` — working guidelines for AI agents editing this repo

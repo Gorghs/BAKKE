@@ -26,7 +26,7 @@ services:
       retries: 10
 
   backend:
-    build: ./backend
+    build: ./apps/backend
     command: >
       sh -c "alembic upgrade head &&
              uvicorn app.main:app --host 0.0.0.0 --port 8000"
@@ -50,7 +50,7 @@ services:
       STORAGE_PROVIDER: local
       VIDEO_OUTPUT_DIR: /app/data/videos
     volumes:
-      - ./backend:/app
+      - ./apps/backend:/app
       - bakkedata:/app/data
     ports:
       - "8000:8000"
@@ -61,11 +61,11 @@ services:
         condition: service_healthy
 
   worker:
-    build: ./backend
-    command: sh -c "alembic upgrade head && python -m app.jobs.worker"
+    build: ./apps/backend
+    command: sh -c "alembic upgrade head && python -m app.infrastructure.jobs.worker"
     environment: *backend_env
     volumes:
-      - ./backend:/app
+      - ./apps/backend:/app
       - bakkedata:/app/data
     depends_on:
       postgres:
@@ -74,7 +74,7 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ./frontend
+    build: ./apps/frontend
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:8000/api
     ports:

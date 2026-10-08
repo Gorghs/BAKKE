@@ -17,29 +17,29 @@ This file is for AI coding agents working in this repository. Read it before edi
 
 ## Conventions
 
-- Python 3.12+ (CI/docker) / 3.14 (local venv at `../.venv` from `backend/`).
+- Python 3.12+ (CI/docker) / 3.14 (local venv at `../../.venv` from `apps/backend/`).
 - `metadata` is **not** a valid column name (SQLAlchemy reserved). Pydantic draft objects
   use `.metadata`; ORM models use `.extra` (JSON).
 - Fact/Finding/Timeline rows need an explicit `db.flush()` after insert so surrogate IDs
   are stable (they feed audit `source_object_ids` and fusion references).
-- API writes are committed by `get_db` (`backend/app/database.py`) — services should
-  `db.flush()`, not `db.commit()`. The worker (`app/jobs/worker.py`) commits its own
+- API writes are committed by `get_db` (`apps/backend/app/database.py`) — services should
+  `db.flush()`, not `db.commit()`. The worker (`app/infrastructure/jobs/worker.py`) commits its own
   session after each job.
-- Task-name dispatch in `app/providers/llm.py` `run_task` maps API task names to mock
+- Task-name dispatch in `app/infrastructure/providers/llm.py` `run_task` maps API task names to mock
   functions — when adding a task, add the mapping.
 
 ## Commands
 
 ```bash
 # tests (23, ~2s, no services needed)
-cd backend && DATABASE_URL="sqlite:///:memory:" ../.venv/bin/python -m pytest tests/ -q
+cd apps/backend && DATABASE_URL="sqlite:///:memory:" ../../.venv/bin/python -m pytest tests/ -q
 
 # run API + worker locally
-cd backend && ../.venv/bin/uvicorn app.main:app --port 8000
-cd backend && ../.venv/bin/python -m app.jobs.worker
+cd apps/backend && ../../.venv/bin/uvicorn app.main:app --port 8000
+cd apps/backend && ../../.venv/bin/python -m app.infrastructure.jobs.worker
 
 # migrations
-cd backend && ../.venv/bin/alembic upgrade head
+cd apps/backend && ../../.venv/bin/alembic upgrade head
 
 # full stack
 docker compose up --build            # postgres :5432, redis :6380, api :8000, web :3000
@@ -48,7 +48,7 @@ docker compose up --build            # postgres :5432, redis :6380, api :8000, w
 docker compose exec backend python -m scripts.seed_demo
 
 # frontend build check
-cd frontend && npm run build
+cd apps/frontend && npm run build
 ```
 
 ## Smoke flow to re-verify the stack
