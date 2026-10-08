@@ -1,0 +1,5 @@
+[project]
+name = "bakke"
+version = "0.1.0"
+description = "BAKKE - Evidence-Constrained Hypothesis Intelligence"
+requires-python = ">=3.11"
