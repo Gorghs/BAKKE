@@ -17,9 +17,8 @@ out/
 .next-env.d.ts
 
 # Env / secrets
-.env
-.env.local
-.env.*.local
+.env*
+!.env.example
 
 # Runtime data
 data/

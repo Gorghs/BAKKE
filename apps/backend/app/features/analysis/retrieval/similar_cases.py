@@ -12,7 +12,7 @@ from app.models import (
     ReferenceCase,
     SimilarCase,
 )
-from app.infrastructure.providers.embeddings import get_embedding_provider
+from app.adapters.providers import get_embedding_provider
 from app.features.analysis.reasoning_agent import InvestigativeReasoningAgent
 
 REFERENCE_ONLY = "investigative_reference_only"

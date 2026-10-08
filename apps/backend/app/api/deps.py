@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.database import get_db
-from app.models import Case, User
+from app.models import Case, GeneratedVideo, Scenario, User
 
 settings = get_settings()
 
@@ -64,13 +64,37 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
             raise
         except Exception as exc:
             raise HTTPException(status_code=401, detail=f"invalid firebase token: {exc}")
+    if settings.is_production:
+        raise HTTPException(status_code=503, detail="authentication not configured")
     return ensure_dev_user(db)
 
 
-def get_owned_case(case_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Case:
+def ensure_owned_case(db: Session, case_id: str, user: User) -> Case:
     case = db.get(Case, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="case not found")
     if case.owner_id != user.id:
         raise HTTPException(status_code=403, detail="not allowed to access this case")
     return case
+
+
+def get_owned_case(case_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Case:
+    return ensure_owned_case(db, case_id, user)
+
+
+def get_owned_scenario(
+    scenario_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> Scenario:
+    scenario = db.get(Scenario, scenario_id)
+    if not scenario:
+        raise HTTPException(status_code=404, detail="scenario not found")
+    ensure_owned_case(db, scenario.case_id, user)
+    return scenario
+
+
+def get_owned_video(video_id: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> GeneratedVideo:
+    video = db.get(GeneratedVideo, video_id)
+    if not video:
+        raise HTTPException(status_code=404, detail="video not found")
+    ensure_owned_case(db, video.case_id, user)
+    return video

@@ -1,0 +1,1 @@
+Revise the scenario to fix fixable issues. Never modify a hard forensic finding to save a hypothesis. If fixing the issues would require changing a hard finding, reject the scenario instead (reject=true) and say why. Revisions must remain compatible with every HARD fact, forensic anchor and timeline entry.

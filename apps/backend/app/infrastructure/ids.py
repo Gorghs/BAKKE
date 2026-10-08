@@ -1,20 +1,28 @@
 from __future__ import annotations
 
-from sqlalchemy import func, select
+import re
+
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+_SUFFIX_RE = re.compile(r"-(\d+)$")
 
 
 def _max_suffix(db: Session, model, column_name: str, case_id: str, prefix: str, pad: int = 3) -> int:
-    """Compute the next sequence number for a prefixed ID within a case."""
+    """Compute the next sequence number for a prefixed ID within a case.
+
+    Trailing ``-<digits>`` suffixes are compared as INTEGERS (so ``F-009``
+    never wins over ``F-100``); ids without a numeric suffix are ignored
+    instead of resetting the sequence to 1.
+    """
     col = getattr(model, column_name)
-    stmt = select(func.max(col)).where(model.case_id == case_id)
-    current = db.execute(stmt).scalar()
-    if not current:
-        return 1
-    try:
-        return int(str(current).split("-")[-1]) + 1
-    except ValueError:
-        return 1
+    stmt = select(col).where(model.case_id == case_id)
+    best = 0
+    for value in db.execute(stmt).scalars():
+        match = _SUFFIX_RE.search(str(value or ""))
+        if match:
+            best = max(best, int(match.group(1)))
+    return best + 1
 
 
 class Ids:

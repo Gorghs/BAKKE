@@ -1,0 +1,1 @@
+Generate as many materially distinct candidate explanations as the evidence and search space justify. Do not fabricate facts. Preserve authoritative forensic findings exactly. Use similar cases only as analogical references. Candidates must be genuinely different in mechanism or actor, not rewordings of each other.

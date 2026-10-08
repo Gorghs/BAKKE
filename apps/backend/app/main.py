@@ -1,21 +1,54 @@
 from __future__ import annotations
 
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
-from app.api import cases, providers, scenarios
+from app.adapters.providers import validate_provider_types
+from app.api import cases, providers, replay, scenarios
 from app.api.deps import get_current_user
+from app.config import ConfigError, get_settings, validate_settings
 from app.database import get_db
 from app.models import User
 from app.schemas.common import Message
 
-app = FastAPI(title="BAKKE - Evidence-Constrained Hypothesis Intelligence", version="0.1.0")
+logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Fail clearly on invalid configuration.
+
+    Production refuses to start with invalid settings (no silent fallback to
+    mocks, no wildcard CORS, no dev auth). Development logs the same problems
+    as warnings so the stack stays runnable while misconfigured.
+    """
+    settings = get_settings()
+    errors = validate_settings(settings) + validate_provider_types()
+    if errors:
+        if settings.is_production:
+            raise ConfigError(errors)
+        for err in errors:
+            logger.warning("configuration: %s", err)
+    yield
+
+
+settings = get_settings()
+
+app = FastAPI(
+    title="BAKKE - Evidence-Constrained Hypothesis Intelligence",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+_origins = settings.cors_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_origins,
+    allow_credentials="*" not in _origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -23,6 +56,7 @@ app.add_middleware(
 app.include_router(cases.router)
 app.include_router(scenarios.router)
 app.include_router(providers.router)
+app.include_router(replay.router)
 
 
 @app.get("/health")

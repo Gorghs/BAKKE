@@ -14,7 +14,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.api.deps import ensure_dev_user  # noqa: E402
 from app.database import SessionLocal, init_db  # noqa: E402
 from app.models import Case, EvidenceItem, GeneratedVideo, Scenario  # noqa: E402
-from app.features.analysis.analysis_service import AnalysisService  # noqa: E402
+from app.adapters.persistence import SqlAlchemyUnitOfWork
+from app.workflows import AnalyzeCaseWorkflow  # noqa: E402
 from app.features.visualization.video_service import VideoService  # noqa: E402
 
 POST_MORTEM = """POST-MORTEM REPORT - CASE PM-2026-018
@@ -126,8 +127,7 @@ def seed_demo(analyze: bool = True, generate_video: bool = True) -> str:
 
         if analyze:
             print("running analysis pipeline...")
-            svc = AnalysisService()
-            result = svc.analyze_case(db, case.id)
+            result = AnalyzeCaseWorkflow(SqlAlchemyUnitOfWork(db)).run(case.id)
             print(f"analysis result: {result}")
             db.commit()
 

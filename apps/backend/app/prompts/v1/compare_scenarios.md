@@ -1,0 +1,1 @@
+Compare the supplied scenarios side by side. Surface the elements they share and the elements on which they differ, especially differences in mechanism, timing, actors and use of evidence. Do not rank them by likelihood and do not pick a winner; the comparison only shows structure.

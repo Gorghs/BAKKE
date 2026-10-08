@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import logging
 import time
 
 from app.config import get_settings
 from app.database import SessionLocal
+
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -11,18 +14,18 @@ settings = get_settings()
 def worker_loop() -> None:
     from app.infrastructure.jobs.tasks import claim_next_job, run_job
 
-    print(f"[worker] BAKKE worker started (poll={settings.JOB_POLL_INTERVAL_SECONDS}s)")
+    logger.info("BAKKE worker started (poll=%ss)", settings.JOB_POLL_INTERVAL_SECONDS)
     while True:
         db = SessionLocal()
         try:
             job = claim_next_job(db)
             if job:
-                print(f"[worker] running job {job.id} ({job.job_type})")
+                logger.info("running job %s (%s) case=%s", job.id, job.job_type, job.case_id)
                 job = run_job(db, job)
-                print(f"[worker] job {job.id} -> {job.status}")
+                logger.info("job %s -> %s", job.id, job.status)
             db.commit()
-        except Exception as exc:
-            print(f"[worker] error: {exc}")
+        except Exception:
+            logger.exception("worker iteration failed")
             db.rollback()
         finally:
             db.close()
@@ -30,4 +33,8 @@ def worker_loop() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
     worker_loop()

@@ -206,3 +206,11 @@ export interface ProviderStatus {
   video_understanding: { provider: string; is_mock: boolean };
   video_generation: { provider: string; is_mock: boolean };
 }
+
+export interface CompareResult {
+  case_id: string;
+  scenarios: ScenarioOut[];
+  shared: string[];
+  differences: string[];
+  discriminating: { pair: string[]; note: string }[];
+}

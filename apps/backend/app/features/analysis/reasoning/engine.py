@@ -4,14 +4,14 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.infrastructure.agents.contracts import HypothesisDraft, ScenarioEventDraft
+from app.domain.contracts import HypothesisDraft, ScenarioEventDraft
 from app.features.analysis.reasoning_agent import (
     HypothesisCriticAgent,
     HypothesisRevisionAgent,
     InvestigativeReasoningAgent,
 )
 from app.config import get_settings
-from app.features.analysis.constraints.engine import ConstraintEngine, ConstraintViolation
+from app.domain.constraints.engine import ConstraintEngine, ConstraintViolation
 from app.infrastructure.ids import Ids
 from app.models import (
     AuditEvent,
@@ -27,9 +27,9 @@ from app.models import (
     SimilarCase,
     TimelineEvent,
 )
-from app.features.analysis.reasoning.dedup import deduplicate
-from app.features.analysis.reasoning.ranking import rank_scenarios
-from app.features.analysis.reasoning.scoring import compute_evidence_consistency_score
+from app.domain.dedup import deduplicate
+from app.domain.ranking import rank_scenarios
+from app.domain.scoring import compute_evidence_consistency_score
 
 settings = get_settings()
 

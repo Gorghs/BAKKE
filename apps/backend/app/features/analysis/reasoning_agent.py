@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.infrastructure.agents.base import BaseAgent
-from app.infrastructure.agents.contracts import (
+from app.domain.contracts import (
     CritiqueResult,
     ExpansionResult,
     HypothesisDraft,

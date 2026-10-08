@@ -1,0 +1,1 @@
+Summarize the scenario in plain investigative language. Present it as one candidate explanation consistent with the evidence, never as a determination of what happened. Mention the strongest supporting elements and the main open unknowns.

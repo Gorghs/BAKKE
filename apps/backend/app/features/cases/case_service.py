@@ -5,9 +5,10 @@ from typing import Any
 from fastapi import HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
+from app.config import get_settings
 from app.infrastructure.hashing import sha256_bytes, sha256_file
 from app.infrastructure.ids import Ids
-from app.infrastructure.storage import get_storage_provider
+from app.adapters.storage import get_storage_provider
 from app.models import (
     AuditEvent,
     Case,
@@ -20,7 +21,7 @@ from app.models import (
     ScenarioScore,
     TimelineEvent,
 )
-from app.infrastructure.providers.base import EVIDENCE_TYPES
+from app.domain.constants import EVIDENCE_TYPES
 
 
 class CaseService:
@@ -70,6 +71,12 @@ class CaseService:
             size = len(data)
             if size == 0:
                 raise HTTPException(status_code=422, detail="empty file")
+            limit_mb = get_settings().UPLOAD_MAX_MB
+            if size > limit_mb * 1024 * 1024:
+                raise HTTPException(
+                    status_code=413,
+                    detail=f"file exceeds the {limit_mb} MB upload limit",
+                )
             content_hash = sha256_bytes(data)
             evidence_id = Ids.next_evidence(db, case_id)
             file_path = storage.save(case_id, evidence_id, file.filename or "evidence", data)
