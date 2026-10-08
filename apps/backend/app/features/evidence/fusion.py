@@ -5,7 +5,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.infrastructure.agents.base import BaseAgent
-from app.infrastructure.agents.contracts import ExtractionResult
+from app.domain.contracts import ExtractionResult
 from app.infrastructure.ids import Ids
 from app.models import (
     AuditEvent,

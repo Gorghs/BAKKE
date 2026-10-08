@@ -1,0 +1,1 @@
+The previously suggested scenario was rejected. Propose new candidates that are materially distinct from the rejected one and from each other: change the mechanism, the actor set, or the causal chain — not the wording. Stay within the evidence: no invented facts, no violations of authoritative forensic findings.

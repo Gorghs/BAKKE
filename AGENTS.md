@@ -17,7 +17,7 @@ This file is for AI coding agents working in this repository. Read it before edi
 
 ## Conventions
 
-- Python 3.12+ (CI/docker) / 3.14 (local venv at `../../.venv` from `apps/backend/`).
+- Python 3.12+ (docker) / 3.14 (local venv at `../../.venv` from `apps/backend/`).
 - `metadata` is **not** a valid column name (SQLAlchemy reserved). Pydantic draft objects
   use `.metadata`; ORM models use `.extra` (JSON).
 - Fact/Finding/Timeline rows need an explicit `db.flush()` after insert so surrogate IDs
@@ -25,13 +25,20 @@ This file is for AI coding agents working in this repository. Read it before edi
 - API writes are committed by `get_db` (`apps/backend/app/database.py`) — services should
   `db.flush()`, not `db.commit()`. The worker (`app/infrastructure/jobs/worker.py`) commits its own
   session after each job.
-- Task-name dispatch in `app/infrastructure/providers/llm.py` `run_task` maps API task names to mock
-  functions — when adding a task, add the mapping.
+- Provider code belongs in `app/adapters/` behind the protocols in `app/ports/`. The
+  adapter catalogue (`app/adapters/providers/`) is the only place mapping a
+  `provider_type` to a class; core/domain code never hardcodes vendor or model names.
+- Prompts live in `app/prompts/v1/` (`PROMPT_VERSION` in `app/prompts/__init__.py`);
+  the version is recorded in audit entries and replay manifests. New LLM task = add a
+  prompt file + `LLM_TASKS` / `TASK_SCHEMAS` entries — both mock and live providers
+  validate output against the schema.
+- Jobs are thin dispatch: `app/infrastructure/jobs/tasks.py` `HANDLERS` maps a job type
+  to exactly one workflow in `app/workflows/`.
 
 ## Commands
 
 ```bash
-# tests (23, ~2s, no services needed)
+# tests (58: unit/contract/integration/e2e, no services needed)
 cd apps/backend && DATABASE_URL="sqlite:///:memory:" ../../.venv/bin/python -m pytest tests/ -q
 
 # run API + worker locally
@@ -54,8 +61,12 @@ cd apps/frontend && npm run build
 ## Smoke flow to re-verify the stack
 
 1. `docker compose up -d` → `/health` ok, `/api/providers` shows mocks.
-2. Create case → upload ≥7 right-hip PM reports + FR + IR → `POST /analyze`.
-3. Poll `/analysis/status` until `SUCCEEDED`; open `/dashboard` (≥1 survivor).
-4. `POST .../scenarios/{sid}/visualize` → poll `/api/scenarios/{sid}/video` until
-   `READY`; stream `/api/videos/{vid}/stream` (expect 206 on Range).
-5. Check the audit trail for extraction/fusion/constraints/review/video entries.
+2. Create case → upload ≥7 right-hip PM reports + FR + IR → `POST /api/cases/{id}/analyze`.
+3. Poll `/api/cases/{id}/analysis/status` until `SUCCEEDED`; open the case in the
+   frontend (`/cases/{id}`) — `/api/cases/{id}/dashboard` shows ≥1 survivor.
+4. `POST /api/cases/{id}/scenarios/{sid}/visualize` → poll
+   `/api/cases/{id}/scenarios/{sid}/video` until `READY`; stream
+   `/api/videos/{vid}/stream` (expect 206 on Range).
+5. Check the audit trail (`GET /api/cases/{id}/audit`) for fusion,
+   hypothesis/scoring, constraint rejections (`scenario_rejection`),
+   `adversarial_review` and `video_generated` entries.

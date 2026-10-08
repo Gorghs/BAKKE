@@ -13,9 +13,13 @@ cd apps/backend
 ../../.venv/bin/alembic revision --autogenerate -m "describe change"   # new migration
 ```
 
-Migrations live in `apps/backend/alembic/versions/`. The initial schema is
-`5a69a0d5ecc5_init.py` (35 tables), verified against Postgres. The dockerized backend
-and worker both run `alembic upgrade head` before starting.
+Migrations live in `apps/backend/alembic/versions/`:
+
+- `5a69a0d5ecc5_init.py` — the initial schema (verified against Postgres).
+- `a1b2c3d4e5f6_add_provider_settings.py` — `provider_settings`, the runtime
+  provider-override table behind `PUT /api/providers`.
+
+The dockerized backend and worker both run `alembic upgrade head` before starting.
 
 ## Model groups
 
@@ -24,14 +28,15 @@ All models inherit `app/models/base.py` (id = string UUID, created_at/updated_at
 | Group | Models |
 |---|---|
 | Users & cases | `User`, `Case` |
-| Evidence | `EvidenceItem` (case-linked, `evidence_id` like `E-001`, content hash, status) |
-| Fusion | `Fact` (`extra` JSON: source ids, certainty, injury location, camera coverage, etc.), `Entity`, `Finding` |
+| Evidence | `EvidenceItem` (case-linked, `evidence_id` like `E-001`, content hash, status), `EvidenceSource`, per-type asset tables (`DocumentAsset`, `AudioAsset`, `ImageAsset`, `VideoAsset`) |
+| Fusion | `Fact` (`extra` JSON: source ids, certainty, injury location, camera coverage, etc.), `Entity` (+ `Person` / `Object` / `Location` / `Event` subtypes), `EntityRelationship`, `Finding` |
 | Timeline | `TimelineEvent` (ordering index, time window, location) |
 | Constraints | `Constraint` (HARD/SOFT, type), `Conflict` (two constraints/anchors in tension), `ForensicAnchor` (firm evidence, timestamps) |
-| Hypotheses & scenarios | `Hypothesis` (e.g. `H-012`), `Scenario` (summary, cause claim, status, survivor, rejection reason, `extra` rank), `ScenarioEvent`, `ScenarioScore` (total + breakdown JSON), `ScenarioEvidenceLink` (supporting / contradicting) |
-| Similar cases | `SimilarCase` (reference label, similarity, relevant patterns; reference-only) |
-| Video | `VideoScenarioSpec` (visual-only prompt, shots JSON), `GeneratedVideo` (status, provider, spec_id, duration, size, label) |
-| Audit | `AuditEvent` (action, agent, provider, summary, source object ids), `Job` (status, progress, result, error, attempts) |
+| Hypotheses & scenarios | `Hypothesis` (e.g. `H-012`), `Scenario` (summary, cause claim, status, survivor, rejection reason, `extra` rank), `ScenarioEvent`, `ScenarioScore` (total + breakdown JSON), `ScenarioEvidenceLink` (supporting / contradicting), `DiscriminatingEvidence`, `ScenarioComparison` |
+| Similar cases | `ReferenceCase` (embedded reference corpus), `SimilarCase` (reference label, similarity, relevant patterns; reference-only) |
+| Video | `VideoScenarioSpec` (visual-only prompt + `spec` JSON: characters, objects, unknown regions, duration), `VideoShot` (index, duration, description, prompt fragment), `GeneratedVideo` (status, provider, spec_id, dimensions, duration, validation JSON, label, `is_mock`) |
+| Audit | `AuditEvent` (action, agent, provider, summary, source object ids, `prompt_version`; `extra` JSON carries `run_id` and stage counts), `Job` (status, progress, result, error, attempts) |
+| Runtime config | `ProviderSetting` (key/value rows for generic + legacy provider keys; highest-resolution source for capability config) |
 
 ## JSON conventions
 

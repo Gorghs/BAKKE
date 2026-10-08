@@ -38,13 +38,15 @@ The UI and API docs both say so explicitly.
 
 - Backend: extraction, fusion, constraints, anchors, conflicts, hypothesis generation,
   adversarial review/expansion, scoring, ranking, similar-case retrieval, video spec +
-  mock renderer, audit, job queue (Redis wake-up + DB polling worker), Postgres via
-  Alembic.
+  mock renderer, audit, job queue (Redis wake-up + DB polling worker), offline replay
+  manifests, runtime provider overrides, Postgres via Alembic.
 - Frontend: dashboard, case creation, evidence upload, timeline/conflicts/constraints,
   scenario list + detail (score breakdown, events, unknowns, video), compare,
   visualization player, audit trail.
 - Providers: fully deterministic mocks by default (no API keys, nothing leaves the
-  machine); OpenAI hooks exist for LLM/embeddings/STT/vision/video.
+  machine). Each capability switches to a live adapter only when explicitly configured:
+  a generic HTTP adapter for text/embeddings/STT/vision/video understanding, and
+  vendor adapters (kling, runway, hailuo) for video generation.
 
 ## Known limitations / next steps
 

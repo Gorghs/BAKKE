@@ -34,17 +34,40 @@ services:
       DATABASE_URL: postgresql+psycopg2://bakke:bakke@postgres:5432/bakke
       REDIS_URL: redis://redis:6379/0
       APP_ENV: development
+      # Generic provider configuration (per capability)
+      LLM_PROVIDER_TYPE: ${LLM_PROVIDER_TYPE:-}
+      LLM_API_BASE_URL: ${LLM_API_BASE_URL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-}
+      EMBEDDING_PROVIDER_TYPE: ${EMBEDDING_PROVIDER_TYPE:-}
+      EMBEDDING_API_BASE_URL: ${EMBEDDING_API_BASE_URL:-}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      STT_PROVIDER_TYPE: ${STT_PROVIDER_TYPE:-}
+      STT_API_BASE_URL: ${STT_API_BASE_URL:-}
+      STT_API_KEY: ${STT_API_KEY:-}
+      STT_MODEL: ${STT_MODEL:-}
+      VISION_PROVIDER_TYPE: ${VISION_PROVIDER_TYPE:-}
+      VISION_API_BASE_URL: ${VISION_API_BASE_URL:-}
+      VISION_API_KEY: ${VISION_API_KEY:-}
+      VISION_MODEL: ${VISION_MODEL:-}
+      VIDEO_UNDERSTANDING_PROVIDER_TYPE: ${VIDEO_UNDERSTANDING_PROVIDER_TYPE:-}
+      VIDEO_UNDERSTANDING_API_BASE_URL: ${VIDEO_UNDERSTANDING_API_BASE_URL:-}
+      VIDEO_UNDERSTANDING_API_KEY: ${VIDEO_UNDERSTANDING_API_KEY:-}
+      VIDEO_UNDERSTANDING_MODEL: ${VIDEO_UNDERSTANDING_MODEL:-}
+      VIDEO_GENERATION_PROVIDER_TYPE: ${VIDEO_GENERATION_PROVIDER_TYPE:-}
+      VIDEO_GENERATION_API_BASE_URL: ${VIDEO_GENERATION_API_BASE_URL:-}
+      VIDEO_GENERATION_API_KEY: ${VIDEO_GENERATION_API_KEY:-}
+      VIDEO_GENERATION_MODEL: ${VIDEO_GENERATION_MODEL:-}
+      # Legacy names (deprecated) — resolved by the app when the generic key is unset
       LLM_PROVIDER: ${LLM_PROVIDER:-mock}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-mock}
       STT_PROVIDER: ${STT_PROVIDER:-mock}
       VISION_PROVIDER: ${VISION_PROVIDER:-mock}
       VIDEO_UNDERSTANDING_PROVIDER: ${VIDEO_UNDERSTANDING_PROVIDER:-mock}
       VIDEO_GENERATION_PROVIDER: ${VIDEO_GENERATION_PROVIDER:-mock}
-      VIDEO_GENERATION_API_KEY: ${VIDEO_GENERATION_API_KEY:-}
-      VIDEO_GENERATION_MODEL: ${VIDEO_GENERATION_MODEL:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
-      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
       MAX_REASONING_ITERATIONS: 5
       TOP_N_DEFAULT: 10
       STORAGE_PROVIDER: local
@@ -74,9 +97,12 @@ services:
         condition: service_healthy
 
   frontend:
-    build: ./apps/frontend
+    build:
+      context: ./apps/frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000/api
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     ports:
       - "3000:3000"
     depends_on:

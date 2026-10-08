@@ -373,6 +373,14 @@ body {
   color: var(--txt-dark);
 }
 
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+.field:focus-visible {
+  outline: none;
+}
+
 .chip {
   border: 1px solid rgba(76, 130, 190, 0.28);
   background: rgba(13, 21, 40, 0.7);

@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from app.infrastructure.agents.base import BaseAgent, AgentError
-from app.infrastructure.agents.contracts import ExtractionResult
+from app.domain.contracts import ExtractionResult
 from app.models import EvidenceItem
 from app.config import get_settings
-from app.infrastructure.providers.registry import get_stt_provider, get_vision_provider, get_video_understanding_provider
+from app.adapters.providers import get_stt_provider, get_vision_provider, get_video_understanding_provider
 
 settings = get_settings()
 
@@ -133,6 +133,7 @@ class ImageAgent(BaseAgent):
 
     def extract(self, evidence: EvidenceItem, text: str = "") -> ExtractionResult:
         vision = get_vision_provider()
+        self.provider_label = getattr(vision, "label", "") or vision.name
         prompt = (
             "Analyze this image as crime-scene evidence. Return JSON with 'objects', "
             "'people', 'locations' and 'notes'. Only report what is visible; never infer unseen events."
@@ -163,6 +164,7 @@ class VideoEvidenceAgent(BaseAgent):
 
     def extract(self, evidence: EvidenceItem, text: str = "") -> ExtractionResult:
         vu = get_video_understanding_provider()
+        self.provider_label = getattr(vu, "label", "") or vu.name
         prompt = (
             "Analyze this video as evidence. Return JSON with 'people', 'objects', "
             "'timestamps' and 'notes'. Only report what is visible; never infer unseen events."

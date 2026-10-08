@@ -11,99 +11,223 @@ BAKKE is an **Evidence-Constrained Hypothesis Intelligence** system. It never de
 4. Eliminates scenarios that violate hard constraints, via an iterative adversarial
    review + expansion loop.
 5. Ranks the survivors with an **Evidence Consistency Score** (consistency with available
-   evidence — **not** probability).
+   evidence — **not** a likelihood or verdict).
 6. Renders a labelled, visual-only **3D animated reconstruction** of a scenario.
 
 Everything is auditable: every step is written to an `audit_events` trail.
 
-## Layout
+## Repository layout
 
 ```
 apps/
   backend/
     app/
-      main.py            # FastAPI app factory
-      config.py          # Settings (pydantic-settings)
+      main.py            # FastAPI app; lifespan validates config; CORS
+      config.py          # capability specs, resolve_capability, validate_settings
       database.py        # engine, session, get_db (commits on success)
-      models/            # SQLAlchemy ORM models
-      schemas/           # Pydantic request/response DTOs
-      api/               # Routers (cases, scenarios, providers) + auth dependency
-      features/          # Domain features
-        cases/           #   case CRUD / dashboard services
-        evidence/        #   extraction + fusion agents
-        analysis/        #   analysis service, reasoning agent + engine,
-                         #   constraint engine, similar-case retrieval
-        scenarios/       #   scenario detail / compare services
-        visualization/   #   director agent + video service
-      infrastructure/    # Shared technical services
-        providers/       #   pluggable AI providers (registry + mocks + real)
-        agents/          #   BaseAgent harness + typed agent contracts
-        storage/         #   storage provider (local disk)
-        jobs/            #   background job queue, worker, audit service
-        ids.py           #   surrogate id builders
-        hashing.py       #   sha256 helpers
-    tests/               # pytest suite
-    scripts/             # seed_demo, seed_reference_cases
-    alembic/             # migrations
-  frontend/
-    app/                 # Next.js App Router pages (dashboard, case, evidence,
-                         #   timeline, scenarios, scenario detail, compare,
-                         #   visualization, audit)
-    components/          # QueryProvider, Nav, ui primitives
-    features/            # domain components (scenarios/ScenarioCard)
-    lib/                 # types.ts, api.ts (axios + streaming URL helper)
-scripts/
-  seed_demo.py           # repo-level launcher for the demo seeder
-docs/                    # architecture, api, database, setup, testing, ...
+      domain/            # pure rules: contracts, scoring, ranking, dedup, constraints/
+      ports/             # provider-independent Protocols (see below)
+      adapters/
+        ai/              # http_chat (chat/embeddings), mock_llm, embeddings_mock, rule_based
+        media/           # http_chat (vision/STT/video understanding), mock,
+                         #   vendor_video (kling/runway/hailuo), schematic (ffmpeg mock render)
+        persistence/     # SqlAlchemyUnitOfWork + runtime_config (DB provider overrides)
+        providers/       # provider catalogue + factory functions (the ONLY type -> class map)
+        storage/         # local disk (default) + Firebase storage
+      features/          # case, evidence, analysis, scenarios, visualization services/agents
+      workflows/         # context, analyze_case, extract_evidence, generate_video,
+                         # manifest (replay manifests), replay (offline re-run)
+      prompts/           # PROMPT_VERSION, TASK_SCHEMAS, loader + prompts/v1/*.md
+      api/               # routers: cases, scenarios, providers, replay + auth deps
+      infrastructure/
+        jobs/            # worker (poll loop), tasks.py (thin dispatch), audit service
+        agents/          # BaseAgent harness (agents call LLMPort, never a vendor)
+        ids.py hashing.py
+      models/ schemas/   # SQLAlchemy ORM models / Pydantic DTOs
+    tests/               # unit/ contract/ integration/ e2e/
+    alembic/ scripts/    # migrations; seed_demo, seed_reference_cases
+  frontend/              # Next.js App Router (app/, components/, features/, hooks/, lib/)
+docs/                    # architecture, api, database, setup, testing, video-pipeline
+scripts/                 # repo-level seed_demo launcher
+Makefile  docker-compose.yml  .env.example
 ```
 
-## Pipeline
+## Layering
 
-`POST /api/cases/{case_id}/analyze` enqueues an `ANALYZE_CASE` job. The **worker**
-(`apps/backend/app/infrastructure/jobs/worker.py`) claims it and runs `AnalysisService.analyze_case`:
+Dependencies point toward the core: entry points call workflows, workflows and features
+call ports and domain rules, and adapters implement the ports. Persistence and provider
+access never leak into the domain layer.
+
+```mermaid
+flowchart TD
+    subgraph thin["Thin entry points"]
+        API["api/ routers"]
+        JOBS["infrastructure/jobs: worker + HANDLERS"]
+    end
+    subgraph core["Application core"]
+        WF["workflows/: AnalysisContext, AnalyzeCase, ExtractEvidence, GenerateVideo, replay"]
+        FEAT["features/: extraction, fusion, reasoning, retrieval, director"]
+        DOM["domain/: contracts, constraints, scoring, ranking, dedup"]
+    end
+    subgraph ports["ports/: provider-independent protocols"]
+        P1["LLMPort, VisionPort, EmbeddingsPort, SpeechToTextPort,<br/>VideoGenerationPort, VideoUnderstandingPort, StoragePort,<br/>AuditPort, JobPort, CaseStatusPort, EvidenceStatusPort, UnitOfWork"]
+    end
+    subgraph ad["adapters/"]
+        CAT["providers/: catalogue + factories<br/>(the only provider_type → class map)"]
+        IMPL["ai · media · persistence · storage"]
+    end
+
+    API --> WF
+    JOBS --> WF
+    WF --> FEAT
+    WF --> DOM
+    FEAT --> DOM
+    WF --> P1
+    FEAT --> P1
+    FEAT --> CAT
+    CAT --> IMPL
+    IMPL -. implements .-> P1
+```
+
+- **domain/** has no imports from SQLAlchemy, adapters or HTTP — enforced by
+  `tests/unit/test_domain_and_prompts.py`.
+- Code asks the catalogue (`adapters/providers`) for a *provider instance* and then uses
+  it only through its port protocol. The catalogue is the only place that maps a
+  configured `provider_type` to a concrete class; adding a provider means registering it
+  there, never editing workflows or features.
+- **api/** and **jobs/tasks.py** only enqueue/dispatch: `HANDLERS` maps a job type to
+  exactly one workflow (`ANALYZE_CASE → AnalyzeCaseWorkflow`,
+  `GENERATE_VIDEO → GenerateVideoWorkflow`).
+- Two deliberate wiring exceptions live at the edges, not in the core: `workflows/replay.py`
+  constructs a `SqlAlchemyUnitOfWork` and forces `mock_providers()`, and case file storage
+  goes through the `adapters/storage` factory (`get_storage_provider`).
+
+## Provider-agnostic capabilities
+
+Six capabilities, each configured by the same four generic environment keys
+`<PREFIX>_PROVIDER_TYPE`, `<PREFIX>_API_BASE_URL`, `<PREFIX>_API_KEY`, `<PREFIX>_MODEL`
+(see `.env.example` for the authoritative list):
+
+| Capability | Port | Env prefix | Adapter types (`*_PROVIDER_TYPE`) |
+|---|---|---|---|
+| text | `LLMPort` | `LLM` | `mock`, `http_chat` |
+| embeddings | `EmbeddingsPort` | `EMBEDDING` | `mock`, `http_chat` |
+| speech | `SpeechToTextPort` | `STT` | `mock`, `http_chat` |
+| vision | `VisionPort` | `VISION` | `mock`, `http_chat` |
+| video understanding | `VideoUnderstandingPort` | `VIDEO_UNDERSTANDING` | `mock`, `http_chat` |
+| video generation | `VideoGenerationPort` | `VIDEO_GENERATION` | `mock`, `kling`, `runway`, `hailuo` |
+
+- `http_chat` speaks the de-facto `/chat/completions`, `/embeddings`,
+  `/audio/transcriptions` dialect over plain HTTP (no vendor SDK); it requires
+  `API_BASE_URL`, `API_KEY` and `MODEL`.
+- Video generation has no `http_chat`: each vendor adapter (`app/adapters/media/vendor_video.py`)
+  encodes its own submit/poll endpoint and requires `VIDEO_GENERATION_API_KEY`.
+- Unknown types are rejected at build time (`ProviderConfigurationError`) and at write
+  time by `PUT /api/providers`.
+
+### Resolution precedence
+
+`resolve_capability()` (`app/config.py`) resolves each capability in this order:
+
+1. **runtime DB override** — `provider_settings` table, written through
+   `PUT /api/providers`, cached in-process for 2s, applied without a restart;
+2. **generic env** — `<PREFIX>_*` keys from the environment / `.env`;
+3. **legacy env** — `OPENAI_API_KEY`, `LLM_PROVIDER`, `OPENAI_MODEL`, `<X>_PROVIDER`, …
+   (`openai` is normalized to `http_chat`; a legacy `OPENAI_API_KEY` alone supplies the
+   OpenAI base URL);
+4. **default** — explicit `mock`.
+
+### Explicit mock, no silent fallback
+
+- The default configuration runs entirely locally: every capability resolves to `mock`.
+- A non-mock type without credentials fails loudly (at construction, or on first use for
+  vendor video adapters); there is no fallback to another provider.
+- Mocks are labelled **DEVELOPMENT MOCK** and reported as `is_mock: true` by
+  `GET /api/providers`; evidence is only ever sent to explicitly configured providers.
+- `app/main.py` runs `validate_settings() + validate_provider_types()` at startup:
+  in **production** any error aborts startup (`ConfigError`); in development the same
+  problems are logged as warnings so the stack stays runnable.
+- Production validation additionally requires a unique `SECRET_KEY`, an explicit
+  non-wildcard `CORS_ALLOW_ORIGINS`, Firebase auth configuration and `DATABASE_URL`.
+- The only forced-mock switch is `mock_providers()`, an explicit context manager used by
+  offline replay. Tests select mocks explicitly through configuration instead
+  (`tests/conftest.py` sets every `*_PROVIDER_TYPE=mock`). A live run never falls back
+  to a mock.
+
+## Pipelines
+
+`POST /api/cases/{id}/analyze` enqueues `ANALYZE_CASE`; the worker
+(`app/infrastructure/jobs/worker.py`, DB polling with best-effort Redis wake-up) claims
+it and runs `AnalyzeCaseWorkflow`:
 
 ```
-evidence ──extract──▶ facts + entities + findings
-   │                       │
-   └──retrieve────▶ similar cases (reference ONLY, never transferred as fact)
-                          │
-                          ▼
-                    constraint engine ──▶ hard & soft constraints
-                          │
-                          ▼
-                    hypothesis generation (dynamic count based on facts)
-                          │
-                          ▼
-              iterative adversarial loop (≤ MAX_REASONING_ITERATIONS):
-                  review scenario against constraints & facts
-                  → HARD violation?  REJECT
-                  → weak / unexplored?  REVISE / EXPAND, regenerate
-                          │
-                          ▼
-                    scoring + ranking (survivors)
-                          │
-                          ▼
-               build visual spec (director, visual-only)  ──▶ video job
+evidence ──ExtractEvidenceWorkflow──▶ facts + entities + findings + timeline
+   │                                          │
+   └──fusion──────────────────────────────────┘
+                                              ▼
+                          similar-case retrieval (embeddings; reference ONLY)
+                                              │
+                                              ▼
+                          ReasoningEngine + domain constraint engine:
+                              generate candidate hypotheses from the fact base
+                              → iterative adversarial loop (≤ MAX_REASONING_ITERATIONS):
+                                 review vs constraints & facts
+                                 → HARD violation?  REJECT
+                                 → weak / unexplored?  REVISE / EXPAND, regenerate
+                              → Evidence Consistency Score + ranking (survivors)
+                                              │
+                                              ▼
+                          audit entries + replay manifest (data/replay/)
 ```
 
-`POST /api/cases/{id}/scenarios/{scenario_id}/visualize` enqueues a
-`GENERATE_VIDEO` job. The worker builds the visual spec and renders the MP4.
+`POST /api/cases/{id}/scenarios/{sid}/visualize` enqueues `GENERATE_VIDEO`;
+`GenerateVideoWorkflow` builds the visual-only spec, renders the MP4 (mock: schematic
+ffmpeg clip; live: vendor adapter) and writes its own manifest.
 
-## Agents
+Every run shares one `AnalysisContext` (`workflows/context.py`): a `run_id`, the active
+`PROMPT_VERSION`, provider labels, and timed stages — the same values appear in logs,
+audit entries and manifests.
 
-`apps/backend/app/infrastructure/agents/contracts.py` defines typed drafts exchanged between the pipeline
-and providers:
+## Versioned prompts
 
-- `ExtractionResult` — facts, entities, findings, timeline from one evidence item.
-- `HypothesisSet` / `HypothesisDraft` — scenario candidates with events.
-- `CritiqueResult` / `RevisionResult` / `ExpansionResult` — adversarial loop outputs.
+- Prompt text lives in `app/prompts/v1/*.md` (`_base.md` plus one file per task).
+- `PROMPT_VERSION` (`app/prompts/__init__.py`) is stamped into every audit entry and
+  replay manifest; changing a prompt incompatibly means adding `v2` and bumping it.
+- `LLM_TASKS` is the task catalogue; `TASK_SCHEMAS` gives five tasks typed output
+  contracts (`ExtractionResult`, `HypothesisSet`, `CritiqueResult`, `RevisionResult`,
+  `ExpansionResult`). Mock **and** live providers pass through
+  `validate_task_output()` — malformed output raises instead of degrading silently.
 
-The deterministic agents (`features/evidence/extract.py`, `features/evidence/fusion.py`,
-`features/analysis/reasoning_agent.py`, `features/visualization/director.py`)
-orchestrate these contracts; providers (`infrastructure/providers/llm.py`, `rule_based.py`,
-`schematic.py`)
-implement them. The default `mock` implementations are pure-Python and deterministic so
-the whole pipeline runs with no external API and produces reproducible results.
+## Replay and offline manifests
+
+- At the end of every AnalyzeCase / GenerateVideo run a manifest is written to
+  `{DATA_DIR}/replay/{case_id}.{kind}.json` (`manifest_version: 1`): run id, stage
+  timings, provider labels, prompt version. Analysis manifests (kind `analysis`) add
+  evidence content hashes and result counts; video manifests use kind
+  `video_{scenario_id}` and record the scenario/video ids and status.
+- `POST /api/cases/{id}/replay` (`{job_type: ANALYZE_CASE | GENERATE_VIDEO}`) re-runs
+  the workflow inside `mock_providers()` — no external API calls. The replay's own
+  manifest is stored beside the original as `{kind}.replay`, and the original recording
+  is restored untouched.
+- `GET /api/cases/{id}/replay/manifest?kind=analysis` returns a recorded manifest.
+  e2e coverage: `tests/e2e/test_replay.py`.
+
+## Audit trail
+
+Workflows persist through `UnitOfWork` ports; `SqlAlchemyAudit.record()` appends an
+`AuditEvent` (action, agent, provider, summary, source object ids, `prompt_version`;
+the `extra` JSON carries the `run_id` and stage counts). Extraction failures, fusion,
+similar-case retrieval, each reasoning iteration, scoring and video generation all
+record. Read via `GET /api/cases/{id}/audit`.
+
+## Test layering
+
+| Layer | Directory | Covers |
+|---|---|---|
+| unit | `tests/unit` | domain rules, config resolution + validation, prompts/contracts |
+| contract | `tests/contract` | port conformance, http_chat adapter against a mocked transport, catalogue errors |
+| integration | `tests/integration` | full workflow runs on a real (temp) database: demo pipeline, video isolation, zero survivors |
+| e2e | `tests/e2e` | FastAPI `TestClient` flows: capabilities/provider API, analysis flow, replay |
 
 ## Key design decisions
 
@@ -120,6 +244,6 @@ the whole pipeline runs with no external API and produces reproducible results.
 - **Audit everything.** Extraction, fusion, constraint checks, adversarial iterations,
   scoring, ranking, and video generation are all recorded with agent, provider, and
   source object ids.
-- **Pluggable providers with safe defaults.** The default configuration is 100% local and
-  deterministic; switching to real providers requires explicit config and never leaks
-  evidence to providers that aren't configured.
+- **Pluggable providers with safe defaults.** The default configuration runs entirely
+  local and deterministic; switching to real providers requires explicit config and
+  never leaks evidence to providers that aren't configured.

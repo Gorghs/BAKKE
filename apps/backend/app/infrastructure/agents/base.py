@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, TypeVar, Generic
 
 from app.config import get_settings
-from app.infrastructure.providers.registry import get_llm_provider
+from app.adapters.providers import get_llm_provider
 
 settings = get_settings()
 T = TypeVar("T")

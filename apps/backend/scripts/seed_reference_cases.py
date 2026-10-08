@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.database import SessionLocal, init_db  # noqa: E402
 from app.models import ReferenceCase  # noqa: E402
-from app.infrastructure.providers.embeddings import get_embedding_provider  # noqa: E402
+from app.adapters.providers import get_embedding_provider  # noqa: E402
 
 REFERENCE_CASES = [
     {

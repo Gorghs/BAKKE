@@ -1,0 +1,1 @@
+Identify which documented patterns from the retrieved similar cases are relevant analogies for the current case. Similar cases are reference material only: their conclusions are never evidence about this case. Return the patterns worth carrying over, phrased as questions or mechanisms to check, not as answers.

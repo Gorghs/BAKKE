@@ -17,7 +17,7 @@ from app.models import (
     VideoScenarioSpec,
     VideoShot,
 )
-from app.infrastructure.providers.registry import get_video_provider
+from app.adapters.providers import get_video_provider
 
 settings = get_settings()
 
@@ -124,7 +124,7 @@ class VideoService:
             video_row.model = getattr(provider, "model", "")
             video_row.prompt_used = prompt
 
-            out_path = str(Path(settings.video_path) / f"{scenario.id}.mp4")
+            out_path = str(Path(settings.video_path) / f"{scenario.id}-{video_row.id}.mp4")
             duration = max(spec_row.spec.get("total_duration", 12.0), 6.0)
             if provider.is_mock:
                 duration = min(duration, 12.0)
