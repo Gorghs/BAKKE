@@ -15,7 +15,13 @@ class VideoDirectorAgent(BaseAgent):
 
     name = "VideoDirectorAgent"
 
-    SHOT_DURATION = 4.0
+    # Gemini's Videos tool returns one fixed-length clip of about 10 seconds and
+    # the bridge ignores any requested duration, so the shot list has to fit that
+    # window instead of asking the model to squeeze a longer list on its own.
+    TARGET_TOTAL_SECONDS = 10.0
+    MIN_SHOT_SECONDS = 1.0
+    MAX_SHOT_SECONDS = 2.5
+    MAX_SHOTS = int(TARGET_TOTAL_SECONDS / MIN_SHOT_SECONDS)
 
     def direct(self, spec: dict[str, Any], events: list[ScenarioEvent]) -> dict[str, Any]:
         shots = self._build_shots(spec, events)
@@ -26,18 +32,15 @@ class VideoDirectorAgent(BaseAgent):
         return spec
 
     def _build_shots(self, spec: dict[str, Any], events: list[ScenarioEvent]) -> list[dict[str, Any]]:
-        shots: list[dict[str, Any]] = []
         # Establish shot: environment only, no characters.
-        shots.append(
+        shots: list[dict[str, Any]] = [
             {
-                "index": 1,
-                "duration_seconds": 4.0,
                 "description": f"Establishing view of {spec['environment']['description']}.",
                 "camera": "wide static establishing shot, stable, eye level",
                 "action": [],
             }
-        )
-        idx = 2
+        ]
+        event_shots: list[dict[str, Any]] = []
         for ev in events:
             event_type = ev.event_type  # KNOWN/INFERRED/UNKNOWN/HYPOTHESIZED
             desc = ev.description
@@ -53,16 +56,28 @@ class VideoDirectorAgent(BaseAgent):
             else:
                 action = [{"description": "EVENT NOT ESTABLISHED", "supported": False, "note": "unknown period"}]
                 camera = "slow neutral transition; label 'EVENT NOT ESTABLISHED'"
-            shots.append(
-                {
-                    "index": idx,
-                    "duration_seconds": self.SHOT_DURATION,
-                    "description": desc[:500],
-                    "camera": camera,
-                    "action": action,
-                }
-            )
-            idx += 1
+            event_shots.append({"description": desc[:500], "camera": camera, "action": action})
+
+        # Keep every event, but when there are more than fit, fold the tail into
+        # one closing shot rather than dropping any of them.
+        capacity = self.MAX_SHOTS - len(shots)
+        if len(event_shots) > capacity:
+            tail = event_shots[capacity - 1 :]
+            merged = {
+                "description": " Then: ".join(s["description"] for s in tail)[:500],
+                "camera": "medium shot, neutral framing",
+                "action": [a for s in tail for a in s["action"]],
+            }
+            event_shots = event_shots[: capacity - 1] + [merged]
+
+        shots.extend(event_shots)
+
+        # Spread the fixed clip length across every shot.
+        per_shot = self.TARGET_TOTAL_SECONDS / len(shots)
+        per_shot = round(max(self.MIN_SHOT_SECONDS, min(self.MAX_SHOT_SECONDS, per_shot)), 1)
+        for i, shot in enumerate(shots, start=1):
+            shot["index"] = i
+            shot["duration_seconds"] = per_shot
         return shots
 
     def _build_prompt(self, spec: dict[str, Any]) -> str:
@@ -172,17 +187,6 @@ def build_visual_spec(scenario: Scenario, events: list[ScenarioEvent], anchors: 
             }
         )
 
-    # Visual-only spatial anchor (injury region) preserved for the scene.
-    injury_region = None
-    for a in anchors:
-        if a.get("type") == "INJURY_LOCATION":
-            injury_region = a.get("value", {}).get("location")
-    if injury_region:
-        if characters:
-            characters[0]["injury_region"] = injury_region
-        if injury_region not in seen_loc:
-            objects.append({"label": f"Injury region: {injury_region}"[:40], "description": f"Injury region marker: {injury_region}", "color": "#c85a5a", "pos": [0.5, 0.52]})
-
     unknown_periods = [
         "EVENT NOT ESTABLISHED - events in this period are not supported by the available evidence"
     ]
@@ -203,10 +207,8 @@ def build_visual_spec(scenario: Scenario, events: list[ScenarioEvent], anchors: 
         "label": f"HYPOTHESIS {getattr(scenario, 'hypothesis_label', '') or '?'}",
         "title": scenario.summary[:200],
         "environment": environment,
-        "locations": locations,
         "characters": characters,
         "objects": objects,
-        "injury_region": injury_region,
         "unknown_periods": unknown_periods,
         "aspect_ratio": "16:9",
         "constraints": [

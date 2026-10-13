@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,67 @@ from app.models import (
 from app.providers.registry import get_video_provider
 
 settings = get_settings()
+
+_EXPANSION_LABEL = "NOT RECORDED FOOTAGE"
+_EXPANSION_MAX_CHARS = 2500
+_EXPANSION_FORBIDDEN = (
+    "witness",
+    "similar case",
+    "reference case",
+    "hypothesis score",
+    "evidence consistency",
+    "rejection",
+    "cause claim",
+    "recommendation",
+    "most likely",
+)
+_EVIDENCE_ID = re.compile(r"\bE-\d", re.IGNORECASE)
+
+
+def _expansion_problem(candidate: str) -> str:
+    if not candidate:
+        return "isolation: expansion is empty"
+    if _EXPANSION_LABEL not in candidate:
+        return f"isolation: expansion dropped the {_EXPANSION_LABEL} label"
+    if len(candidate) > _EXPANSION_MAX_CHARS:
+        return f"isolation: expansion too long ({len(candidate)} chars)"
+    low = candidate.lower()
+    for token in _EXPANSION_FORBIDDEN:
+        if token in low:
+            return f"isolation: forbidden token '{token}'"
+    if _EVIDENCE_ID.search(candidate):
+        return "isolation: evidence id in expansion"
+    return ""
+
+
+def expand_visual_prompt(prompt: str) -> tuple[str, dict[str, Any]]:
+    """Rewrite the director's prompt through the LLM expansion task.
+
+    The payload carries the visual prompt and nothing else, so the isolation
+    contract holds by construction. Any provider failure or isolation
+    violation returns the original prompt: expansion must never block a
+    render and must never add facts.
+    """
+    meta: dict[str, Any] = {"provider": "", "is_mock": False, "used": False, "reason": ""}
+    if not prompt:
+        return prompt, meta
+    from app.providers.registry import get_llm_provider
+
+    try:
+        llm = get_llm_provider()
+        meta["provider"] = llm.name
+        meta["is_mock"] = bool(getattr(llm, "is_mock", False))
+        out = llm.run_task("expand_video_prompt", {"prompt": prompt})
+        candidate = str(out.get("prompt") or "").strip()
+        problem = _expansion_problem(candidate)
+        if problem:
+            meta["reason"] = problem
+            return prompt, meta
+        meta["used"] = True
+        return candidate, meta
+    except Exception as exc:
+        meta["reason"] = f"expansion failed: {exc}"[:300]
+        return prompt, meta
 
 
 def _scene_for_mock(spec: dict[str, Any]) -> dict[str, Any]:
@@ -80,6 +142,11 @@ class VideoService:
         scenario.hypothesis_label = hypothesis.hypothesis_id if hypothesis else "H-000"
         spec = build_visual_spec(scenario, events, anchors)
         directed = self.director.direct(spec, events)
+        raw_prompt = directed.get("visual_prompt", "")
+        expanded, expansion = expand_visual_prompt(raw_prompt)
+        directed["visual_prompt_director"] = raw_prompt
+        directed["visual_prompt"] = expanded
+        directed["prompt_expansion"] = expansion
 
         if not spec_row:
             spec_row = VideoScenarioSpec(
@@ -140,7 +207,13 @@ class VideoService:
             dims = _probe_video(video_row.video_path)
             video_row.width = dims["width"]
             video_row.height = dims["height"]
-            video_row.validation = self.validate(video_row.video_path, spec_row.spec)
+            video_row.validation = self.validate(
+                video_row.video_path,
+                spec_row.spec,
+                expected_duration=duration if provider.is_mock else 0.0,
+            )
+            if video_row.validation.get("duration"):
+                video_row.duration_seconds = float(video_row.validation["duration"])
             video_row.status = "READY" if video_row.validation.get("ok") else "INVALID"
             db.add(
                 AuditEvent(
@@ -170,8 +243,13 @@ class VideoService:
             db.flush()
             return video_row
 
-    def validate(self, video_path: str, spec: dict[str, Any]) -> dict[str, Any]:
-        """Validate generated video: exists, not corrupt, correct duration/aspect/format."""
+    def validate(self, video_path: str, spec: dict[str, Any], expected_duration: float = 0.0) -> dict[str, Any]:
+        """Validate generated video: exists, not corrupt, playable dimensions.
+
+        expected_duration is the duration the provider was asked to render.
+        Real providers cannot honour an arbitrary length (models pick 5-10s),
+        so callers pass 0 for them and the duration check is skipped.
+        """
         from pathlib import Path
 
         p = Path(video_path)
@@ -206,7 +284,6 @@ class VideoService:
             video_stream = next((s for s in streams if s.get("codec_name")), None)
             width = int(video_stream.get("width", 0)) if video_stream else 0
             height = int(video_stream.get("height", 0)) if video_stream else 0
-            expected = min(max(spec.get("total_duration", 6.0), 4.0), 12.0)
             checks.update(
                 {
                     "ok": duration > 0 and width > 0 and height > 0,
@@ -219,8 +296,8 @@ class VideoService:
                 }
             )
             checks["errors"] = []
-            if duration < expected - 1:
-                checks["errors"].append(f"duration {duration}s shorter than expected {expected}s")
+            if expected_duration > 0 and duration < expected_duration - 1:
+                checks["errors"].append(f"duration {duration}s shorter than expected {expected_duration}s")
                 checks["ok"] = False
             return checks
         except Exception as exc:

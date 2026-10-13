@@ -7,6 +7,17 @@ import { api, cn, streamUrl } from "@/lib/api";
 import type { ScenarioOut, VideoSpecOut } from "@/lib/types";
 import { Card, EmptyState, SectionTitle, Spinner, StatusBadge } from "@/components/ui";
 
+type VideoOutLite = {
+  id: string;
+  status: string;
+  is_mock: boolean;
+  label_text: string;
+  error: string;
+  provider: string;
+  model: string;
+  created_at: string;
+};
+
 export default function VisualizationPage() {
   const { id } = useParams<{ id: string }>();
   const search = useSearchParams();
@@ -25,11 +36,18 @@ export default function VisualizationPage() {
     queryKey: ["videos", active],
     queryFn: async () =>
       active
-        ? (await api.get<{ id: string; status: string; is_mock: boolean; label_text: string }[]>(
-            `/scenarios/${active}/video`
-          )).data
+        ? (await api.get<VideoOutLite[]>(`/scenarios/${active}/video`)).data
         : [],
     enabled: !!active,
+    // Generation runs in the worker and takes a couple of minutes. Without
+    // polling, the bay looks frozen after the user clicks Generate.
+    refetchInterval: (query) => {
+      const vids = (query.state.data as VideoOutLite[] | undefined) || [];
+      const inFlight = vids.some(
+        (v) => v.status === "PENDING" || v.status === "GENERATING"
+      );
+      return inFlight ? 4000 : false;
+    },
   });
 
   const { data: spec } = useQuery({
@@ -53,6 +71,15 @@ export default function VisualizationPage() {
   }
 
   const readyVideo = videos?.find((v) => v.status === "READY");
+  const latestVideo = videos?.[0];
+  const generating =
+    !readyVideo &&
+    !!latestVideo &&
+    (latestVideo.status === "PENDING" || latestVideo.status === "GENERATING");
+  const failedVideo =
+    !readyVideo && !generating && !!latestVideo && latestVideo.status !== "READY"
+      ? latestVideo
+      : undefined;
 
   return (
     <div className="space-y-8">
@@ -100,26 +127,45 @@ export default function VisualizationPage() {
                 <div className="radar h-20 w-20">
                   <div className="blip" />
                 </div>
-                <p className="max-w-sm text-xs uppercase leading-relaxed tracking-[0.14em] text-[#7e93b3]">
-                  No reconstruction generated for{" "}
-                  <span className="text-[#4cc9f0]">
-                    {survivors.find((s) => s.id === active)?.hypothesis_label}
-                  </span>
-                </p>
-                <button
-                  onClick={() => visualizeMutation.mutate()}
-                  disabled={visualizeMutation.isPending}
-                  className="btn-cmd rounded-sm px-4 py-2"
-                >
-                  {visualizeMutation.isPending ? "Queuing…" : "Generate 3D animated video"}
-                </button>
+                {generating ? (
+                  <p className="max-w-sm text-xs uppercase leading-relaxed tracking-[0.14em] text-[#4cc9f0]">
+                    Generating reconstruction… this takes about two minutes.
+                  </p>
+                ) : (
+                  <>
+                    <p className="max-w-sm text-xs uppercase leading-relaxed tracking-[0.14em] text-[#7e93b3]">
+                      No reconstruction generated for{" "}
+                      <span className="text-[#4cc9f0]">
+                        {survivors.find((s) => s.id === active)?.hypothesis_label}
+                      </span>
+                    </p>
+                    <button
+                      onClick={() => visualizeMutation.mutate()}
+                      disabled={visualizeMutation.isPending}
+                      className="btn-cmd rounded-sm px-4 py-2"
+                    >
+                      {visualizeMutation.isPending ? "Queuing…" : "Generate 3D animated video"}
+                    </button>
+                  </>
+                )}
+                {failedVideo && (
+                  <p className="term-danger max-w-sm text-xs normal-case">
+                    Last attempt {failedVideo.status.toLowerCase()}:{" "}
+                    {failedVideo.error || "no error detail recorded"}
+                  </p>
+                )}
+                {visualizeMutation.isError && (
+                  <p className="term-danger max-w-sm text-xs normal-case">
+                    {(visualizeMutation.error as Error).message}
+                  </p>
+                )}
               </div>
             )}
           </div>
           {readyVideo && (
             <div className="mt-2 flex items-center gap-3 text-[10px] uppercase tracking-[0.12em] text-[#7e93b3]">
               <StatusBadge status={readyVideo.status} />
-              <span>{readyVideo.is_mock ? "Development mock renderer" : readyVideo.status}</span>
+              <span>{readyVideo.is_mock ? "Development mock renderer" : "3D animated reconstruction"}</span>
               <span className="ml-auto truncate text-[#46597a]">{readyVideo.label_text}</span>
             </div>
           )}
