@@ -828,3 +828,9 @@ def mock_compare(payload: dict[str, Any]) -> dict[str, Any]:
         "note": "Comparison is descriptive; no probability claim is made.",
         "provider": "mock",
     }
+
+def mock_expand_video_prompt(payload: dict[str, Any]) -> dict[str, Any]:
+    prompt = payload.get("prompt", "")
+    if not prompt:
+        return {"prompt": "", "note": "no prompt supplied", "provider": "mock"}
+    return {"prompt": prompt, "note": "mock returns the director prompt unchanged", "provider": "mock"}

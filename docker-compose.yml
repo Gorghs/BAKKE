@@ -42,10 +42,15 @@ services:
       VIDEO_GENERATION_PROVIDER: ${VIDEO_GENERATION_PROVIDER:-mock}
       VIDEO_GENERATION_API_KEY: ${VIDEO_GENERATION_API_KEY:-}
       VIDEO_GENERATION_MODEL: ${VIDEO_GENERATION_MODEL:-}
+      VIDEO_GENERATION_BASE_URL: ${VIDEO_GENERATION_BASE_URL:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      LLM_MAX_RETRIES: ${LLM_MAX_RETRIES:-6}
+      LLM_CALL_MIN_INTERVAL: ${LLM_CALL_MIN_INTERVAL:-0}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
-      MAX_REASONING_ITERATIONS: 5
+      MAX_REASONING_ITERATIONS: ${MAX_REASONING_ITERATIONS:-5}
+      STALE_RUNNING_SECONDS: ${STALE_RUNNING_SECONDS:-900}
       TOP_N_DEFAULT: 10
       STORAGE_PROVIDER: local
       VIDEO_OUTPUT_DIR: /app/data/videos
@@ -54,6 +59,10 @@ services:
       - bakkedata:/app/data
     ports:
       - "8000:8000"
+    # The LLM bridge runs on the host (gemini-web-to-api, port 4981). Linux
+    # containers get no host.docker.internal unless the gateway is mapped.
+    extra_hosts: &backend_hosts
+      - "host.docker.internal:host-gateway"
     depends_on:
       postgres:
         condition: service_healthy
@@ -62,8 +71,11 @@ services:
 
   worker:
     build: ./backend
-    command: sh -c "alembic upgrade head && python -m app.jobs.worker"
+    # No alembic here: backend owns migrations, and two services running
+    # `upgrade head` at once race on creating alembic_version.
+    command: sh -c "python -m app.jobs.worker"
     environment: *backend_env
+    extra_hosts: *backend_hosts
     volumes:
       - ./backend:/app
       - bakkedata:/app/data

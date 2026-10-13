@@ -34,7 +34,7 @@ class Entity(Base, TimestampMixin):
     case_id: Mapped[str] = mapped_column(String(64), ForeignKey("cases.id"), index=True)
     entity_id: Mapped[str] = mapped_column(String(32))  # EN-001
     name: Mapped[str] = mapped_column(String(300))
-    entity_type: Mapped[str] = mapped_column(String(20), index=True)  # PERSON/OBJECT/LOCATION/EVENT
+    entity_type: Mapped[str] = mapped_column(String(64), index=True)  # PERSON/OBJECT/LOCATION/EVENT (LLM may emit other labels)
     canonical_name: Mapped[str] = mapped_column(String(300), default="")
     description: Mapped[str] = mapped_column(String(2000), default="")
     extra: Mapped[dict] = mapped_column(JsonType, default=dict)

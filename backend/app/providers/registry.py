@@ -29,9 +29,10 @@ def get_llm_provider() -> LLMProvider:
     provider = _rt("LLM_PROVIDER", settings.LLM_PROVIDER).lower()
     api_key = _rt("OPENAI_API_KEY", settings.OPENAI_API_KEY)
     model = _rt("OPENAI_MODEL", settings.OPENAI_MODEL)
+    base_url = _rt("OPENAI_BASE_URL", settings.OPENAI_BASE_URL)
     if provider == "mock" or not api_key:
         return MockLLMProvider()
-    return OpenAILLMProvider(api_key=api_key, model=model)
+    return OpenAILLMProvider(api_key=api_key, model=model, base_url=base_url)
 
 
 def get_stt_provider() -> SpeechToTextProvider:
