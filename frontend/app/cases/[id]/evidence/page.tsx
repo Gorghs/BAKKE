@@ -8,15 +8,21 @@ import { api, cn, fmtTime } from "@/lib/api";
 import type { EvidenceOut } from "@/lib/types";
 import { Card, EmptyState, SectionTitle, Spinner, StatusBadge } from "@/components/ui";
 
+// Must stay in step with EVIDENCE_TYPES in backend/app/providers/base.py.
 const ITEM_TYPES = [
-  "POST_MORTEM_REPORT",
-  "FORENSIC_REPORT",
   "INVESTIGATOR_REPORT",
   "WITNESS_STATEMENT",
+  "FORENSIC_REPORT",
+  "POST_MORTEM_REPORT",
+  "PHYSICAL_EVIDENCE",
+  "DIGITAL_RECORD",
+  "LOCATION_RECORD",
+  "DOCUMENT",
+  "TEXT",
   "AUDIO",
   "IMAGE",
   "VIDEO",
-  "DOCUMENT",
+  "OTHER",
 ];
 
 export default function EvidencePage() {
