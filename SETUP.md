@@ -4,7 +4,11 @@
 
 - Docker + Docker Compose (recommended) **or** Python 3.12+ / Node 20+ run locally.
 - ffmpeg/ffprobe on PATH for local video generation (`apt install ffmpeg` or Homebrew).
-- Optional: `OPENAI_API_KEY` for real LLM/embedding/vision/STT providers.
+- Optional: `OPENAI_API_KEY` for real LLM/embedding/vision/STT providers, and
+  `OPENAI_BASE_URL` if that key belongs to an OpenAI-compatible service (Groq,
+  DeepSeek, OpenRouter, Gemini).
+- Optional: a fal.ai key in `VIDEO_GENERATION_API_KEY` for real video
+  generation (see `VIDEO_MODELS.md`).
 
 ## Quick start (Docker)
 
@@ -57,12 +61,14 @@ All settings come from the `.env` file (see `backend/app/config.py`). The import
 | `DATABASE_URL` | `sqlite:///./data/bakke.db` | SQLAlchemy URL; use the Postgres URL in compose |
 | `REDIS_URL` | `redis://localhost:6379/0` | Worker wake-up pub/sub (falls back to polling) |
 | `LLM_PROVIDER` | `mock` | `mock`, `openai`, or `anthropic` |
+| `OPENAI_API_KEY` | (empty) | Real provider key; only required when providers are switched off `mock` |
+| `OPENAI_BASE_URL` | (empty) | OpenAI-compatible endpoint: Groq, DeepSeek, OpenRouter, Gemini. Empty means api.openai.com |
 | `EMBEDDING_PROVIDER` | `mock` | `mock` or `openai` |
 | `STT_PROVIDER` | `mock` | `mock` or `openai` |
 | `VISION_PROVIDER` | `mock` | `mock` or `openai` |
 | `VIDEO_UNDERSTANDING_PROVIDER` | `mock` | `mock` or `openai` |
-| `VIDEO_GENERATION_PROVIDER` | `mock` | `mock` or `openai` |
-| `OPENAI_API_KEY` | (empty) | Real provider key; only required when providers are switched off `mock` |
+| `VIDEO_GENERATION_PROVIDER` | `mock` | `mock`, `fal`, `kling`, `runway`, `hailuo` |
+| `VIDEO_GENERATION_MODEL` | (empty) | For `fal`: a model id such as `fal-ai/kling-video/v2.1/standard/text-to-video` |
 | `MAX_REASONING_ITERATIONS` | `5` | Adversarial review/expand iterations |
 | `MAX_HYPOTHESES` | `60` | Cap on hypothesis scenarios |
 | `TOP_N_DEFAULT` | `10` | Default number of scenarios ranked |

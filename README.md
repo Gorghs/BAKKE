@@ -67,7 +67,7 @@ npm run dev
 cd backend && DATABASE_URL="sqlite:///:memory:" ../.venv/bin/python -m pytest tests/ -q
 ```
 
-23 tests, no services or API keys needed. See `TESTING.md`.
+71 tests, no services or API keys needed. See `TESTING.md`.
 
 ## Documentation
 
@@ -75,6 +75,7 @@ cd backend && DATABASE_URL="sqlite:///:memory:" ../.venv/bin/python -m pytest te
 - `API.md` — endpoint reference
 - `DATABASE.md` — schema, migrations, conventions
 - `VIDEO_PIPELINE.md` — visual-only spec + renderer isolation
+- `VIDEO_MODELS.md` — video provider comparison, limits, and the fal.ai choice
 - `RESEARCH_NOTES.md` — principles, score semantics, limitations
 - `SETUP.md` — full configuration reference
 - `AGENTS.md` — working guidelines for AI agents editing this repo
