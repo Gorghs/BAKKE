@@ -38,3 +38,6 @@ Thumbs.db
 # Logs
 *.log
 nohup.out
+
+# Browser tooling
+.playwright-mcp/
