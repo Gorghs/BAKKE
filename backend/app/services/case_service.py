@@ -17,10 +17,10 @@ from app.models import (
     Fact,
     ForensicAnchor,
     Scenario,
-    ScenarioScore,
     TimelineEvent,
 )
 from app.providers.base import EVIDENCE_TYPES
+from app.services.scenario_service import scenario_out
 
 
 class CaseService:
@@ -121,20 +121,8 @@ class CaseService:
         scenarios = db.query(Scenario).filter_by(case_id=case_id).all()
         survivors = [s for s in scenarios if s.is_survivor]
 
-        top_scenarios = []
-        for sc in survivors:
-            score = 0
-            sc_score = db.query(ScenarioScore).filter_by(scenario_id=sc.id).order_by(ScenarioScore.created_at.desc()).first()
-            if sc_score:
-                score = sc_score.total
-            hyp_label = ""
-            from app.models import Hypothesis
-
-            hyp = db.get(Hypothesis, sc.hypothesis_id)
-            if hyp:
-                hyp_label = hyp.hypothesis_id
-            top_scenarios.append({"id": sc.id, "hypothesis_label": hyp_label, "score": score, "summary": sc.summary[:200], "rank": sc.extra.get("rank", 0)})
-        top_scenarios.sort(key=lambda x: x["rank"] or 999)
+        top_scenarios = [scenario_out(db, sc) for sc in survivors]
+        top_scenarios.sort(key=lambda x: (x.get("score_total") or 0, x.get("hypothesis_label") or ""), reverse=True)
 
         from app.models import GeneratedVideo, SimilarCase
 
