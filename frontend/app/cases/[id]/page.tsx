@@ -1,8 +1,9 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { useEffect } from "react";
 import { api, cn, fmtNumber } from "@/lib/api";
 import type { AnalysisStatus, CaseDashboard } from "@/lib/types";
 import { Card, SectionTitle, Spinner, StatusBadge, Stat } from "@/components/ui";
@@ -10,6 +11,8 @@ import { ScenarioCard } from "@/components/ScenarioCard";
 
 export default function CaseOverviewPage() {
   const { id } = useParams<{ id: string }>();
+
+  const qc = useQueryClient();
 
   const { data: dash, isLoading } = useQuery({
     queryKey: ["dashboard", id],
@@ -22,6 +25,12 @@ export default function CaseOverviewPage() {
     refetchInterval: (q) =>
       q.state.data?.status === "PENDING" || q.state.data?.status === "RUNNING" ? 2500 : false,
   });
+
+  useEffect(() => {
+    if (status?.status === "SUCCEEDED" || status?.status === "FAILED") {
+      qc.invalidateQueries({ queryKey: ["dashboard", id] });
+    }
+  }, [status?.status, qc, id]);
 
   const analyzeMutation = useMutation({
     mutationFn: async () => (await api.post<AnalysisStatus>(`/cases/${id}/analyze`)).data,

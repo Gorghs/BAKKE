@@ -9,6 +9,7 @@ settings = get_settings()
 
 
 def worker_loop() -> None:
+    from app.jobs.progress import ProgressReporter
     from app.jobs.supervisor import SUPERVISOR_INTERVAL_SECONDS, supervise
     from app.jobs.tasks import claim_next_job, run_job
 
@@ -23,6 +24,10 @@ def worker_loop() -> None:
                 job = run_job(db, job)
                 print(f"[worker] job {job.id} -> {job.status}")
             db.commit()
+            if job:
+                # Clear only after the terminal status is committed. Until then
+                # the status endpoint must keep reading the live progress row.
+                ProgressReporter(job.id).clear()
             if time.monotonic() - last_supervise >= SUPERVISOR_INTERVAL_SECONDS:
                 last_supervise = time.monotonic()
                 report = supervise(db)

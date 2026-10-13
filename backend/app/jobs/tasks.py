@@ -5,6 +5,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.jobs.progress import ProgressReporter
 from app.models import GeneratedVideo, Job, Scenario, VideoScenarioSpec
 from app.services.analysis_service import AnalysisService
 from app.services.video_service import VideoService
@@ -12,13 +13,14 @@ from app.services.video_service import VideoService
 
 def run_job(db: Session, job: Job) -> Job:
     """Execute one background job. Returns the updated job."""
+    progress = ProgressReporter(job.id)
     job.status = "RUNNING"
     job.attempts += 1
     db.flush()
     try:
         if job.job_type == "ANALYZE_CASE":
             service = AnalysisService()
-            result = service.analyze_case(db, job.case_id, job=job)
+            result = service.analyze_case(db, job.case_id, progress=progress)
             job.result = result
             job.status = "SUCCEEDED"
             job.progress = 100

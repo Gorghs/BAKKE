@@ -22,7 +22,6 @@ from app.models import (
     ForensicAnchor,
     GeneratedVideo,
     Hypothesis,
-    Job,
     Location,
     Object,
     Person,
@@ -35,6 +34,15 @@ from app.models import (
     TimelineEvent,
     VideoScenarioSpec,
     VideoShot,
+)
+from app.jobs.progress import (
+    PCT_COMPLETE,
+    PCT_EXTRACTION_END,
+    PCT_EXTRACTION_START,
+    PCT_FUSION,
+    PCT_SIMILAR,
+    NullProgress,
+    Progress,
 )
 from app.reasoning.engine import ReasoningEngine
 from app.retrieval.similar_cases import retrieve_similar_cases
@@ -104,7 +112,8 @@ class AnalysisService:
             db.flush()
         return counts
 
-    def analyze_case(self, db: Session, case_id: str, job: Job | None = None) -> dict[str, Any]:
+    def analyze_case(self, db: Session, case_id: str, progress: Progress | None = None) -> dict[str, Any]:
+        progress = progress or NullProgress()
         case = db.get(Case, case_id)
         if not case:
             raise ValueError("case not found")
@@ -113,20 +122,14 @@ class AnalysisService:
         evidence_items = db.query(EvidenceItem).filter_by(case_id=case_id).all()
         db.flush()
 
-        def _progress(step: int, total: int, label: str) -> None:
-            if job:
-                job.progress = int(step / max(total, 1) * 100)
-                job.result = {"stage": label}
-                db.flush()
-
-        total_steps = len(evidence_items) + 3
-        step = 0
-
         # ---- 1. Multimodal extraction ----
         extractions = []
-        for ev in evidence_items:
-            step += 1
-            _progress(step, total_steps, f"Extracting evidence {ev.evidence_id}")
+        total_items = max(len(evidence_items), 1)
+        for idx, ev in enumerate(evidence_items, start=1):
+            progress.report(
+                f"Extracting evidence {ev.evidence_id}",
+                PCT_EXTRACTION_START + int((PCT_EXTRACTION_END - PCT_EXTRACTION_START) * idx / total_items),
+            )
             agent = get_extractor_agent(ev.item_type)
             text = ev.raw_text
             if not text and ev.file_path:
@@ -155,13 +158,11 @@ class AnalysisService:
             extractions.append((ev, result))
 
         # ---- 2. Fusion ----
-        step += 1
-        _progress(step, total_steps, "Fusing evidence into knowledge graph")
+        progress.report("Fusing evidence into knowledge graph", PCT_FUSION)
         context = self.fusion.run(db, case_id, extractions)
 
         # ---- 3. Similar-case retrieval ----
-        step += 1
-        _progress(step, total_steps, "Retrieving similar documented cases")
+        progress.report("Retrieving similar documented cases", PCT_SIMILAR)
         similar = retrieve_similar_cases(db, case_id)
         db.add(
             AuditEvent(
@@ -175,11 +176,10 @@ class AnalysisService:
         db.flush()
 
         # ---- 4. Investigative reasoning loop ----
-        step += 1
-        _progress(step, total_steps, "Running iterative reasoning")
-        reasoning_result = self.reasoning.run(db, case_id)
+        reasoning_result = self.reasoning.run(db, case_id, progress=progress)
 
         case.status = "ANALYZED"
+        progress.report("Analysis complete", PCT_COMPLETE)
         db.add(
             AuditEvent(
                 case_id=case_id,

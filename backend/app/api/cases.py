@@ -91,11 +91,22 @@ def analyze_case(case: Case = Depends(get_owned_case), db: Session = Depends(get
 
 @router.get("/cases/{case_id}/analysis/status", response_model=AnalysisStatus)
 def analysis_status(case: Case = Depends(get_owned_case), db: Session = Depends(get_db)):
+    from app.jobs.progress import read_progress
     from app.services.audit_service import JobService
 
     job = JobService().latest(db, case.id, "ANALYZE_CASE")
     if not job:
         return AnalysisStatus(case_id=case.id, status="NO_JOB", progress=0)
+    if job.status in ("PENDING", "RUNNING"):
+        live = read_progress(db, job.id)
+        if live is not None:
+            return AnalysisStatus(
+                case_id=case.id,
+                status="RUNNING",
+                progress=live.percent,
+                job_id=job.id,
+                result={"stage": live.stage},
+            )
     return AnalysisStatus(
         case_id=case.id,
         status=job.status,

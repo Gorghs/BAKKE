@@ -4,6 +4,14 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
+from app.jobs.progress import (
+    PCT_REASONING_END,
+    PCT_REASONING_SCORING,
+    PCT_REASONING_START,
+    NullProgress,
+    Progress,
+)
+
 from app.agents.contracts import HypothesisDraft, ScenarioEventDraft
 from app.agents.reasoning import (
     HypothesisCriticAgent,
@@ -37,6 +45,13 @@ STATE_PENDING = "PENDING"
 STATE_VALIDATING = "VALIDATING"
 STATE_SURVIVING = "SURVIVING"
 STATE_REJECTED = "REJECTED"
+
+
+def _iteration_percent(completed_iterations: float, max_iterations: int) -> int:
+    """Reasoning owns the reasoning band of the progress bar."""
+    return PCT_REASONING_START + int(
+        (PCT_REASONING_END - PCT_REASONING_START) * completed_iterations / max_iterations
+    )
 
 
 class ReasoningResult:
@@ -139,7 +154,8 @@ class ReasoningEngine:
         self.revision = HypothesisRevisionAgent()
         self.constraints = ConstraintEngine()
 
-    def run(self, db: Session, case_id: str) -> ReasoningResult:
+    def run(self, db: Session, case_id: str, progress: Progress | None = None) -> ReasoningResult:
+        progress = progress or NullProgress()
         result = ReasoningResult()
         facts = db.query(Fact).filter_by(case_id=case_id).all()
         timeline = db.query(TimelineEvent).filter_by(case_id=case_id).order_by(TimelineEvent.ordering_index).all()
@@ -169,18 +185,30 @@ class ReasoningEngine:
             )
             db.flush()
 
+        progress.report(f"Generated {result.total_generated} candidate hypotheses", PCT_REASONING_START)
+
+        max_iterations = settings.MAX_REASONING_ITERATIONS
         iteration = 0
-        while iteration < settings.MAX_REASONING_ITERATIONS:
+        while iteration < max_iterations:
             iteration += 1
             result.iterations = iteration
+            progress.report(
+                f"Reasoning iteration {iteration}/{max_iterations}",
+                _iteration_percent(iteration - 1, max_iterations),
+            )
             pending = self._load_pending(db, case_id, anchors)
             if not pending:
                 result.stopped_reason = "no pending scenarios"
                 break
 
             new_candidates: list[tuple[str, HypothesisDraft]] = []
-            for sc_dict in pending:
+            for idx, sc_dict in enumerate(pending, start=1):
                 self._validate(db, case_id, sc_dict, fact_by_id, result, new_candidates)
+                progress.report(
+                    f"Reasoning iteration {iteration}/{max_iterations}: "
+                    f"validated candidate {idx}/{len(pending)}",
+                    _iteration_percent(iteration - 1 + idx / len(pending), max_iterations),
+                )
 
             # ---- Hypothesis expansion from failed candidates ----
             if new_candidates:
@@ -198,6 +226,8 @@ class ReasoningEngine:
             if iteration >= settings.MAX_REASONING_ITERATIONS:
                 result.stopped_reason = "max iterations safety limit reached"
                 break
+
+        progress.report("Scoring and ranking surviving scenarios", PCT_REASONING_SCORING)
 
         # ---- Deduplicate survivors ----
         survivors = self._load_survivors(db, case_id, anchors)

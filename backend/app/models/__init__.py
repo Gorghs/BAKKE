@@ -37,6 +37,7 @@ from app.models.scenario import (
 )
 from app.models.video import VideoScenarioSpec, VideoShot, GeneratedVideo
 from app.models.audit_job import AuditEvent, Job
+from app.models.progress import JobProgress
 from app.models.provider import ProviderSetting
 
 __all__ = [
@@ -78,5 +79,6 @@ __all__ = [
     "GeneratedVideo",
     "AuditEvent",
     "Job",
+    "JobProgress",
     "ProviderSetting",
 ]
