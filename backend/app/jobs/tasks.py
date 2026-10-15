@@ -6,7 +6,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.jobs.progress import ProgressReporter
-from app.models import GeneratedVideo, Job, Scenario, VideoScenarioSpec
+from app.models import Case, GeneratedVideo, Job, Scenario, VideoScenarioSpec
 from app.services.analysis_service import AnalysisService
 from app.services.video_service import VideoService
 
@@ -48,6 +48,12 @@ def run_job(db: Session, job: Job) -> Job:
     except Exception as exc:
         job.status = "FAILED"
         job.error = str(exc)[:2000]
+        if job.job_type == "ANALYZE_CASE":
+            # Otherwise the case is left in ANALYZING, which reads as "still
+            # working" long after the worker has given up on it.
+            case = db.get(Case, job.case_id)
+            if case is not None and case.status == "ANALYZING":
+                case.status = "ERROR"
     db.flush()
     return job
 

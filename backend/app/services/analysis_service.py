@@ -124,6 +124,7 @@ class AnalysisService:
 
         # ---- 1. Multimodal extraction ----
         extractions = []
+        failed_items: list[str] = []
         total_items = max(len(evidence_items), 1)
         for idx, ev in enumerate(evidence_items, start=1):
             progress.report(
@@ -141,6 +142,7 @@ class AnalysisService:
             except Exception as exc:
                 ev.status = "FAILED"
                 ev.extra = {**ev.extra, "extraction_error": str(exc)[:500]}
+                failed_items.append(ev.evidence_id)
                 db.add(
                     AuditEvent(
                         case_id=case_id,
@@ -156,6 +158,17 @@ class AnalysisService:
             ev.provider_label = getattr(agent, "provider_label", "")
             db.flush()
             extractions.append((ev, result))
+
+        if failed_items and not extractions:
+            # Every item failed, so there is nothing to fuse. Finishing here
+            # would stamp the case ANALYZED with zero facts and report success,
+            # hiding a broken provider behind an empty-but-valid result.
+            raise RuntimeError(
+                "extraction failed for every evidence item ("
+                + ", ".join(failed_items)
+                + "); no facts could be derived. Check the provider "
+                "configuration and the extraction_failed audit entries."
+            )
 
         # ---- 2. Fusion ----
         progress.report("Fusing evidence into knowledge graph", PCT_FUSION)
