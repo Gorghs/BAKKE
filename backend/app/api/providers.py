@@ -64,7 +64,10 @@ def get_providers(user: User = Depends(get_current_user)) -> dict[str, Any]:
 def update_providers(
     body: ProviderConfigIn, user: User = Depends(get_current_user)
 ) -> dict[str, Any]:
-    stored = runtime_config.set_values(body.model_dump())
+    # Only touch the keys the caller actually sent. Every field defaults to "",
+    # and set_values deletes on empty, so passing a full dump means a request
+    # that names one setting silently wipes the rest. Use "" to clear a key.
+    stored = runtime_config.set_values(body.model_dump(exclude_unset=True))
     report = provider_report()
     report["stored_keys"] = list(stored.keys())
     report["configured_keys"] = {key: bool(runtime_config.get_value(key)) for key in runtime_config.RUNTIME_KEYS}
