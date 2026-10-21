@@ -54,6 +54,11 @@ def _iteration_percent(completed_iterations: float, max_iterations: int) -> int:
     )
 
 
+def _critic_passed(verdict: str) -> bool:
+    """A critic PASS is a PASS whatever it appends to the word."""
+    return str(verdict or "").strip().upper().startswith("PASS")
+
+
 class ReasoningResult:
     def __init__(self) -> None:
         self.total_generated = 0
@@ -364,9 +369,13 @@ class ReasoningEngine:
             self._reject(db, case_id, sc_dict, [ConstraintViolation(type=i.type, severity="HARD", description=i.description, constraint_ref=i.constraint) for i in hard_issues], fact_by_id, result, new_candidates)
             return
 
-        # Fixable issues -> revise and re-check.
+        # Fixable issues -> revise and re-check, but only when the critic did not
+        # pass the candidate. A live adversarial critic passes an evidence-consistent
+        # scenario and still lists nits; revising those burned one iteration per
+        # candidate and ended every real run on the iteration cap with no survivors
+        # (live run fad84815: verdict PASS, superseded by revision, 0 survivors).
         fixable = [i for i in critique.issues if i.fixable]
-        if fixable:
+        if fixable and not _critic_passed(critique.verdict):
             revision = self.revision.revise(sc_dict, [i.model_dump() for i in fixable])
             if revision.reject:
                 self._reject(db, case_id, sc_dict, [ConstraintViolation(type="FORENSIC", severity="HARD", description=revision.reason)], fact_by_id, result, new_candidates)
