@@ -1,0 +1,115 @@
+BAKKE demo runbook
+
+Open http://localhost:3000
+
+The app is up. The worker is idle and the database holds only the five seeded
+cases. You create the case yourself from the form on the front page.
+
+Step 1: create the case
+
+On "/" fill the create form.
+
+  Name:        Missing tools
+  Description: Hand tools were taken from a locked store on the night of
+               5 March. The store was locked at 18:05 and found open at
+               07:50 the next morning.
+
+Submit. You land on the case page.
+
+Step 2: add five evidence items
+
+Use the evidence form on the case page. For each item choose the type, give it
+a title, and paste the text. Add them one at a time.
+
+Item 1, type WITNESS_STATEMENT
+
+Title: Depot supervisor statement, 6 March
+Text:
+I am Ravi Menon, depot supervisor. At 18:05 on 5 March I locked the tool store
+myself and handed the only key to the night guard, Suresh. The store has one
+door on the north side and no window. When I opened the yard at 07:50 on
+6 March the store door was standing open and the padlock was gone. Suresh was
+on duty all night and says he checked the yard twice, once around midnight and
+once at about 04:00.
+
+Item 2, type DIGITAL_RECORD
+
+Title: Gate log extract, 5-6 March
+Text:
+Gate log, 5 March to 6 March. The last vehicle left the yard at 19:12 on
+5 March, registered to Menon Transport. No vehicle entered the yard after
+19:12 and before 07:50 on 6 March. The north yard camera feed stopped
+recording at 21:40 on 5 March. No camera fault was logged and the recorder
+stayed powered. The gate was closed and latched at 19:12.
+
+Item 3, type PHYSICAL_EVIDENCE
+
+Title: Store inventory note, 6 March
+Text:
+Tool store inventory, checked 6 March. The store holds hand tools only:
+spanners, screwdrivers, two hacksaws and a torque wrench. No cutting
+equipment, no chemicals and no fuel are kept in the store. The padlock is a
+standard brass padlock and two keys were cut for it. One key was on the
+supervisor's ring, the other was handed to the night guard. The padlock was
+not recovered.
+
+Item 4, type LOCATION_RECORD
+
+Title: Yard layout record
+Text:
+North yard layout. The tool store door faces the north yard. The yard has one
+gate on the east side. The north wall is solid and windowless. The camera on
+the north wall covers the store door and the gate together. The store is
+roughly 12 metres from the gate. The yard has no lighting on the north side.
+
+Item 5, type WITNESS_STATEMENT
+
+Title: Night guard statement, 6 March
+Text:
+I am Suresh, night guard. I came on duty at 19:00 on 5 March and stayed until
+07:00 on 6 March. At about midnight I walked the yard and the store door was
+shut. At about 04:00 I walked the yard again and the door was shut. I did not
+go into the store at any point. I kept the store key on my belt. At 07:50 I
+opened the gate for Mr Menon and we found the door open together.
+
+Step 3: analyse
+
+Click Analyse on the case page. The job goes to the worker.
+
+Watch the counters. The worker runs one job at a time and the run takes a few
+minutes. Do not start a second analysis while one is running.
+
+When it finishes, the dashboard should show a non-zero timeline count and at
+least one surviving scenario.
+
+Step 4: walk the tabs
+
+Evidence    the five items
+Facts       extracted facts, each one source-linked
+Timeline    events with times. This is the tab that used to come back empty
+Constraints the checks that ran
+Scenarios   survivors and rejections, with reasons
+Audit       the run trail
+Video       the visual-only step
+
+For the video step, case 5241341d (clinic) already has a READY video, so you
+can play that tab without generating anything new. A fresh generation needs a
+current Gemini web cookie, see below.
+
+If something goes wrong
+
+The analysis needs the Groq route. If a job fails with a connection error from
+inside the container, the container lost its network namespace. Fix it with
+
+    docker compose down && docker compose up -d
+
+The free route caps output at 1000 tokens per minute. The extraction writes at
+most 12 facts and puts the timeline first for that reason. If a run returns 0
+timeline events, check that the container runs the committed code.
+
+Video generation needs a current cookie in ~/Projects/gemini-web-to-api/.env
+(GEMINI_COOKIES), then
+
+    cd ~/Projects/gemini-web-to-api && docker compose restart app
+
+The cookie lasts about 75 to 90 minutes.
