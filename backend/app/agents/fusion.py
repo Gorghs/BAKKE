@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -29,6 +31,90 @@ ABSENT_VERBS = ("left", "exited", "departed", "went out", "walked out")
 PRESENT_VERBS = ("entered", "arrived", "was seen", "was observed", "visible", "appeared", "stayed")
 VERIFIED_SOURCES = ("VIDEO", "IMAGE", "CCTV", "LOCATION_RECORD", "DIGITAL_RECORD", "FORENSIC_REPORT")
 
+# Timeline fallback. Real providers spend a tight output budget on the fact list
+# first, so the section written last is the section the budget cuts, and every
+# list in the extraction contract defaults to empty: one live run extracted 26
+# facts and 0 timeline events, so the timeline tab and the reasoning payload were
+# both empty. The clock times are already in the source statements, so the
+# ordering can be derived here without asserting anything the facts do not say.
+TIME_RE = re.compile(r"\b(\d{1,2}:\d{2})\b")
+TIME_QUALIFIERS = ("approximately", "around", "approx", "estimated", "about")
+MONTHS = {
+    "january": 1, "february": 2, "march": 3, "april": 4, "may": 5, "june": 6,
+    "july": 7, "august": 8, "september": 9, "october": 10, "november": 11, "december": 12,
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "jun": 6, "jul": 7, "aug": 8,
+    "sep": 9, "sept": 9, "oct": 10, "nov": 11, "dec": 12,
+}
+DAY_OF_MONTH_RE = re.compile(r"\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?([A-Za-z]{3,9})\b")
+MAX_DERIVED_EVENTS = 12
+
+# Statements mix compact and month-first dates ("5 March", "March 5").
+_MONTH_NAMES = "|".join(sorted(MONTHS, key=len, reverse=True))
+MONTH_FIRST_RE = re.compile(rf"\b({_MONTH_NAMES})\s+(\d{{1,2}})\b", re.IGNORECASE)
+
+
+def _time_tokens(text: str) -> list[str]:
+    return [m.group(1) for m in TIME_RE.finditer(text or "")]
+
+
+def _date_hint(text: str) -> tuple[int, int] | None:
+    """Return (month, day) when the statement names a date, else None.
+
+    A case can span days, so clock time alone cannot order the timeline: 07:50 on
+    6 March precedes 18:05 on 5 March. Both statements say which day they mean.
+    """
+    body = text or ""
+    m = DAY_OF_MONTH_RE.search(body)
+    if m and m.group(2).lower() in MONTHS:
+        return MONTHS[m.group(2).lower()], int(m.group(1))
+    m = MONTH_FIRST_RE.search(body)
+    if m:
+        return MONTHS[m.group(1).lower()], int(m.group(2))
+    return None
+
+
+def _derived_timeline(facts: list[Fact]) -> list[dict[str, Any]]:
+    """One timeline entry per fact that states a clock time, in chronological order.
+
+    Facts are already source-linked, so each entry keeps the fact and the evidence
+    it came from. Ordering uses the date when the statement names one and falls
+    back to clock time otherwise, so an undated fact never jumps ahead of a dated
+    one. Facts without a time are left out rather than dated.
+    """
+    draft: list[tuple[tuple[int, int, int, int], int, dict[str, Any]]] = []
+    for order, fact in enumerate(facts):
+        statement = fact.statement or ""
+        tokens = _time_tokens(statement)
+        if not tokens:
+            continue
+        minutes = _parse_minutes(tokens[0])
+        if minutes is None:
+            continue
+        date = _date_hint(statement)
+        # (has_date, month, day, minute) keeps dated entries ahead of undated ones.
+        key = (1, date[0], date[1], minutes) if date else (0, 0, 0, minutes)
+        approximate = any(q in statement.lower() for q in TIME_QUALIFIERS)
+        draft.append(
+            (
+                key,
+                order,
+                {
+                    "title": statement[:80],
+                    "description": fact.statement,
+                    "time_type": "APPROXIMATE" if approximate else "EXACT",
+                    "time_start": tokens[0],
+                    "time_end": "",
+                    "time_label": tokens[0],
+                    "certainty": "BOUNDED" if approximate else "KNOWN",
+                    "linked_fact_ids": [fact.fact_id],
+                    "source_evidence_ids": list(fact.source_evidence_ids or []),
+                },
+            )
+        )
+    draft.sort(key=lambda d: (d[0], d[1]))
+    return [d[2] for d in draft[:MAX_DERIVED_EVENTS]]
+
+
 
 def _parse_minutes(tok: str) -> int | None:
     try:
@@ -40,9 +126,21 @@ def _parse_minutes(tok: str) -> int | None:
         return None
 
 
-def _sort_key(ev: dict[str, Any]) -> tuple[int, int]:
-    start = _parse_minutes(str(ev.get("time_start", "")))
-    return (start if start is not None else 100000, ev.get("ordering_index", 0))
+def _sort_key(ev: dict[str, Any]) -> tuple[int, int, int, int]:
+    """Chronological order for timeline drafts.
+
+    Clock time alone is wrong on a case that spans days (07:50 on 6 March comes
+    after 18:05 on 5 March), and the fallback orders on month/day, so this key
+    has to agree with it: dated entries first, then by date, then by clock.
+    """
+    body = str(ev.get("description") or ev.get("title") or "")
+    minutes = _parse_minutes(str(ev.get("time_start", "")))
+    date = _date_hint(body)
+    if minutes is None:
+        return (2, 0, 0, ev.get("ordering_index", 0))
+    if date is None:
+        return (1, 0, 0, minutes)
+    return (0, date[0], date[1], minutes)
 
 
 class EvidenceFusionAgent(BaseAgent):
@@ -130,24 +228,32 @@ class EvidenceFusionAgent(BaseAgent):
                     self._make_anchor(db, case_id, finding, evidence)
 
         # ---- 4. Timeline ----
-        drafts: list[dict[str, Any]] = []
-        for evidence, result in extractions:
-            for td in result.timeline_events:
-                drafts.append(
-                    {
-                        "title": td.title,
-                        "description": td.description,
-                        "time_type": td.time_type,
-                        "time_start": td.time_start,
-                        "time_end": td.time_end,
-                        "time_label": td.time_label,
-                        "certainty": td.certainty,
-                        "ordering_index": td.ordering_index,
-                        "linked_fact_ids": td.linked_fact_ids,
-                        "source_evidence_ids": td.source_evidence_ids or [evidence.evidence_id],
-                        "_order": len(drafts),
-                    }
-                )
+        model_timeline = [td for _, result in extractions for td in result.timeline_events]
+        if model_timeline:
+            drafts: list[dict[str, Any]] = []
+            for evidence, result in extractions:
+                for td in result.timeline_events:
+                    drafts.append(
+                        {
+                            "title": td.title,
+                            "description": td.description,
+                            "time_type": td.time_type,
+                            "time_start": td.time_start,
+                            "time_end": td.time_end,
+                            "time_label": td.time_label,
+                            "certainty": td.certainty,
+                            "ordering_index": td.ordering_index,
+                            "linked_fact_ids": td.linked_fact_ids,
+                            "source_evidence_ids": td.source_evidence_ids or [evidence.evidence_id],
+                            "_order": len(drafts),
+                        }
+                    )
+        else:
+            # The extraction contract returns timeline_events last, so a provider
+            # that runs out of output budget loses exactly that section. When the
+            # model sent none, order the facts that state a clock time instead of
+            # leaving the timeline empty.
+            drafts = [{**d, "_order": i} for i, d in enumerate(_derived_timeline(facts))]
         drafts.sort(key=_sort_key)
         for i, d in enumerate(drafts):
             te = TimelineEvent(
