@@ -78,6 +78,10 @@ class OpenAILLMProvider:
         # Account-level limits (Gemini web BardErrorInfo 13 1155) punish bursts,
         # so the retry budget and inter-call pacing are both configurable.
         self.client = OpenAI(api_key=self.api_key, base_url=base_url or None, max_retries=s.LLM_MAX_RETRIES)
+        # 0 leaves max_tokens unset. Endpoints that cap output tokens per minute
+        # refuse a request whose expected output they think is larger than the
+        # cap, and an unset max_tokens reads as their 2048 default.
+        self.max_output_tokens = int(s.LLM_MAX_OUTPUT_TOKENS)
 
     def _system_prompt(self, task: str) -> str:
         base = (
@@ -122,15 +126,18 @@ class OpenAILLMProvider:
         ]
         contract = TASK_CONTRACT_MODELS.get(task)
         last_error = "no attempts made"
+        request: dict[str, Any] = {
+            "model": self.model,
+            "temperature": 0.2,
+            "response_format": {"type": "json_object"},
+            "messages": messages,
+        }
+        if self.max_output_tokens > 0:
+            request["max_tokens"] = self.max_output_tokens
         for attempt in range(self.MAX_GENERATION_ATTEMPTS):
             _pace()
             try:
-                resp = self.client.chat.completions.create(
-                    model=self.model,
-                    temperature=0.2,
-                    response_format={"type": "json_object"},
-                    messages=messages,
-                )
+                resp = self.client.chat.completions.create(**request)
             except BadRequestError as exc:
                 # Transient generation fault: no output to show the model, so
                 # re-call the identical messages.

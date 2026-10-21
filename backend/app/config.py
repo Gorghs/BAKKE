@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     # space consecutive upstream attempts apart.
     LLM_MAX_RETRIES: int = 6
     LLM_CALL_MIN_INTERVAL: float = 0.0
+    # Upper bound on output tokens per call. 0 omits max_tokens, which leaves
+    # the provider to decide. Some endpoints (Groq on-demand) reject a request
+    # whose expected output exceeds their per-minute output budget, and without
+    # max_tokens they assume a default (2048) far above that budget, so every
+    # call is refused. Set this below the provider's output-tokens-per-minute
+    # cap to make that provider usable.
+    LLM_MAX_OUTPUT_TOKENS: int = 0
     EMBEDDING_PROVIDER: str = "mock"
     EMBEDDING_MODEL: str = "text-embedding-3-small"
     STT_PROVIDER: str = "mock"

@@ -11,8 +11,12 @@ def _completion(content: str) -> SimpleNamespace:
     return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))])
 
 
-def _settings(interval: float, retries: int = 6) -> SimpleNamespace:
-    return SimpleNamespace(LLM_CALL_MIN_INTERVAL=interval, LLM_MAX_RETRIES=retries)
+def _settings(interval: float, retries: int = 6, max_tokens: int = 0) -> SimpleNamespace:
+    return SimpleNamespace(
+        LLM_CALL_MIN_INTERVAL=interval,
+        LLM_MAX_RETRIES=retries,
+        LLM_MAX_OUTPUT_TOKENS=max_tokens,
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -60,3 +64,39 @@ class TestUpstreamPacing:
         monkeypatch.setattr(llm, "get_settings", lambda: _settings(0.0, retries=2))
         p = llm.OpenAILLMProvider(api_key="k", model="m", base_url="")
         assert p.client.max_retries == 2
+
+
+class TestOutputTokenBudget:
+    """Groq's on-demand tier caps output tokens per minute. A request without
+    max_tokens reads as the provider's default of 2048, and Groq refuses that
+    outright when the cap is lower (qwen/qwen3.8-27b allows 1000), so the call
+    never happens. Sending an explicit budget makes the request acceptable."""
+
+    @staticmethod
+    def _recording_client(provider, seen: dict):
+        def fake_create(**kwargs):
+            seen.update(kwargs)
+            return _completion('{"summary": "ok"}')
+
+        provider.client.chat.completions.create = fake_create
+
+    def test_max_tokens_is_sent_when_configured(self, monkeypatch):
+        monkeypatch.setattr(llm, "get_settings", lambda: _settings(0.0, max_tokens=900))
+        seen: dict = {}
+        p = llm.OpenAILLMProvider(api_key="k", model="m", base_url="")
+        self._recording_client(p, seen)
+
+        p.run_task("summarize_scenario", {"scenario": {}})
+
+        assert seen["max_tokens"] == 900
+        assert seen["model"] == "m"
+
+    def test_max_tokens_is_omitted_when_unset(self, monkeypatch):
+        monkeypatch.setattr(llm, "get_settings", lambda: _settings(0.0, max_tokens=0))
+        seen: dict = {}
+        p = llm.OpenAILLMProvider(api_key="k", model="m", base_url="")
+        self._recording_client(p, seen)
+
+        p.run_task("summarize_scenario", {"scenario": {}})
+
+        assert "max_tokens" not in seen
