@@ -34,13 +34,79 @@ def _schema(model: type) -> str:
     return json.dumps(model.model_json_schema(), separators=(",", ":"))
 
 
+# Extraction runs on a tight output budget. The route that carries the demo
+# (Groq free tier, qwen/qwen3.8-27b) caps output at 1000 tokens per minute, so a
+# live completion is cut at ~900-1400 tokens and the section written last is the
+# section that is lost. Observed live: a 900-token completion spent itself on 6
+# facts and stopped before findings, entities and timeline_events; a 1400-token
+# completion wrote 10 facts and stopped in the same place. Raising the budget is
+# not available (1800 was refused 429), so the prompt has to make the budget fit.
+#
+# Two changes do that. The schema names only the keys the pipeline reads, and it
+# no longer advertises a per-fact `metadata` block: `spatial` needs a real person,
+# place and time (the spatio-temporal constraint check reads it) and
+# `camera_coverage` needs a real coverage source (the unknown-area counter and
+# similar-case retrieval read it), but asking per fact made the model stamp
+# fabricated defaults on every row ("time": "00:00", camera_coverage on every
+# fact, including facts about paperwork). Both keys stay in the contract and are
+# filled by the mock and by an explicit note in the system prompt instead.
+_EXTRACT_SCHEMA = {
+    "facts": [
+        {
+            "statement": "one sentence",
+            "status": "HARD|BOUNDED|INFERRED|SOFT|CONTESTED|UNKNOWN",
+            "constraint_strength": "HARD|SOFT|NONE",
+            "category": "WHAT|WHEN|WHERE|WHO|HOW|GENERAL",
+            "source_evidence_ids": ["E-001"],
+            "source_refs": [{"evidence_id": "E-001"}],
+        }
+    ],
+    "findings": [
+        {
+            "category": "FORENSIC|POST_MORTEM|INVESTIGATOR|WITNESS",
+            "title": "",
+            "summary": "",
+            "details": {},
+            "strength": "HARD|SOFT",
+            "source_evidence_ids": ["E-001"],
+        }
+    ],
+    "entities": [
+        {
+            "name": "",
+            "entity_type": "PERSON|OBJECT|LOCATION|EVENT",
+            "description": "",
+        }
+    ],
+    "timeline_events": [
+        {
+            "title": "",
+            "description": "",
+            "time_type": "EXACT|APPROXIMATE|UNKNOWN",
+            "time_start": "HH:MM",
+            "time_end": "",
+            "certainty": "KNOWN|BOUNDED",
+            "linked_fact_ids": ["F-001"],
+            "source_evidence_ids": ["E-001"],
+        }
+    ],
+}
+
+# Facts a single text may yield. The pipeline wants the fact list, but the list is
+# what the model writes first and it writes it without a bound, so on a tight
+# budget the list grows until the budget is gone and the later sections are lost.
+# A text that names a dozen times still fits: the cap counts facts, and a
+# timeline event is built per time, not per fact.
+MAX_FACTS_PER_ITEM = 12
+
+
 # Output contract per task, embedded in real providers' prompts. The mock
 # provider ignores this (rule-based output already matches); a real model
 # guesses the structure without it and the caller's model_validate fails
 # (observed live: facts returned as plain strings, `timeline` vs
 # `timeline_events`). Every LLM_TASKS entry needs a schema here.
 TASK_RESPONSE_SCHEMAS: dict[str, str] = {
-    "extract_evidence": _schema(ExtractionResult),
+    "extract_evidence": json.dumps(_EXTRACT_SCHEMA, separators=(",", ":")),
     "generate_hypotheses": _schema(HypothesisSet),
     "expand_alternatives": _schema(ExpansionResult),
     "critique": _schema(CritiqueResult),

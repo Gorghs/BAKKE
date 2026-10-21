@@ -6,7 +6,12 @@ import time
 from typing import Any
 
 from app.config import get_settings
-from app.providers.base import LLM_TASKS, TASK_CONTRACT_MODELS, TASK_RESPONSE_SCHEMAS
+from app.providers.base import (
+    LLM_TASKS,
+    MAX_FACTS_PER_ITEM,
+    TASK_CONTRACT_MODELS,
+    TASK_RESPONSE_SCHEMAS,
+)
 from app.providers import rule_based
 
 
@@ -38,6 +43,112 @@ def _extract_json(text: str) -> dict[str, Any]:
     if start == -1 or end == -1 or end <= start:
         raise ValueError(f"no JSON object in response: {text[:300]}")
     return json.loads(text[start : end + 1])
+
+
+# Keys the pipeline reads from an extraction. A provider that runs out of output
+# budget leaves the section written last incomplete, so what survives the cut is
+# the early sections. The extractor prompt now writes timeline_events first.
+# Only extraction is salvaged this way: it is the one task whose long output
+# cannot fit the budget, and the only one whose partial output is still usable.
+_EXTRACTION_REQUIRED_KEYS = ("facts", "timeline_events")
+
+
+def _maybe_complete_partial(contract: type, text: str) -> dict[str, Any] | None:
+    """Return the validated partial when a cut completion is still usable.
+
+    A completion cut at the output budget is a real partial answer, not noise. If
+    it carries the sections the pipeline reads, the missing tail is the model's own
+    omission and fusion covers it (facts that state a clock time still become
+    timeline entries). Returning None sends the caller back for a compact rewrite
+    instead.
+
+    The cut lands mid-value, so the text usually ends in an unterminated array
+    ("entities": [ or a half-written object). Repair the tail by removing the
+    incomplete trailing element and closing the brackets that were opened.
+    """
+    data = _parse_truncated_json(text)
+    if data is None:
+        return None
+    try:
+        validated = contract.model_validate(data)
+    except Exception:  # noqa: BLE001
+        return None
+    dumped = validated.model_dump()
+    if all(dumped.get(key) for key in _EXTRACTION_REQUIRED_KEYS):
+        return dumped
+    return None
+
+
+def _parse_truncated_json(text: str) -> dict[str, Any] | None:
+    """Parse a JSON object whose tail was cut off mid-value."""
+    body = (text or "").strip()
+    m = re.search(r"```(?:json)?\s*(.*?)```", body, re.DOTALL)
+    if m:
+        body = m.group(1).strip()
+    start = body.find("{")
+    if start == -1:
+        return None
+    # Try the whole object first: the cut may have landed right after a value.
+    end = body.rfind("}")
+    if end > start:
+        try:
+            parsed = json.loads(body[start : end + 1])
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+    # Walk the text and remember the last position at which the object could be
+    # closed cleanly (a complete value, outside a string). Cut there and close.
+    depth = 0
+    in_string = False
+    escaped = False
+    last_safe = -1
+    for i, ch in enumerate(body[start:], start=start):
+        if escaped:
+            escaped = False
+            continue
+        if ch == "\\":
+            escaped = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch in "[{":
+            depth += 1
+        elif ch in "]}":
+            depth -= 1
+            if depth == 0:
+                last_safe = i
+        elif ch == "," and depth >= 1:
+            last_safe = i
+    if last_safe == -1 or depth == 0:
+        return None
+    candidate = body[start:last_safe]
+    # Close whatever brackets the cut left open.
+    opens = candidate.count("[") - candidate.count("]")
+    braces = candidate.count("{") - candidate.count("}")
+    candidate += "}" * max(braces, 0) + "]" * max(opens, 0)
+    try:
+        parsed = json.loads(candidate)
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+# Sent back when a completion ran out of output budget and the partial was not
+# usable (it did not carry both facts and timeline_events). The reply is not
+# replayed to the model: keeping the oversized answer in context leaves the
+# follow-up no room, so every attempt would end on the same cut.
+TRUNCATION_REPAIR = (
+    "Your reply was cut off by the output token budget, so everything after the cut is "
+    "missing. Reply again with the complete JSON in the same schema, but compact: write at "
+    "most 12 short one-sentence facts and put timeline_events and findings FIRST so a cut "
+    "cannot lose them. Use one source_ref per fact at most and add no metadata block. "
+    "Return every section the schema asks for. Build timeline_events from the times and "
+    "ordered steps in the input. Do not drop a section because you ran out of room."
+)
 
 
 class MockLLMProvider:
@@ -106,6 +217,17 @@ class OpenAILLMProvider:
             )
         elif task == "revise":
             base += "Revise the scenario to fix fixable issues. Never modify a hard forensic finding to save a hypothesis. "
+        elif task == "extract_evidence":
+            base += (
+                f"Write at most {MAX_FACTS_PER_ITEM} facts, one short sentence each, and only facts "
+                "the text states. Do not pad the fact list. Then finish the other three sections: "
+                "findings, entities, timeline_events. A timeline_events entry is required for every "
+                "time or ordered step the text states, and the section is not optional even when the "
+                "text has no clock times. Send the sections in this order: timeline_events first, "
+                "then findings, then facts. Use one source_ref per fact at most. Do not add a "
+                "metadata block; where the text states where a person was at a time, put it in the "
+                "fact statement instead. "
+            )
         schema = TASK_RESPONSE_SCHEMAS.get(task, "")
         schema_line = f"\nOutput JSON schema (return exactly these keys):\n{schema}" if schema else ""
         return f"{base}\nTask: {task_desc}\nReturn ONLY valid JSON matching this exact output schema.{schema_line}"
@@ -144,6 +266,28 @@ class OpenAILLMProvider:
                 last_error = str(exc)[:300]
                 continue
             text = resp.choices[0].message.content or "{}"
+            if getattr(resp.choices[0], "finish_reason", None) == "length":
+                # The provider cut the completion at the output budget. The partial
+                # JSON still parses and validates because every missing list
+                # defaults to [], so accepting it silently drops every section after
+                # the cut (observed live: 5/5 items "extracted", 0 timeline events).
+                #
+                # The section order now puts timeline_events first, so a cut draft
+                # usually already carries the section the old order lost (observed:
+                # 3 facts + 4 timeline events, cut in entities). A partial that does
+                # carry the sections the pipeline reads is a truthful partial result,
+                # not a failure: fusion fills the rest from the facts. Only a
+                # partial that is missing them is worth another call, and the
+                # re-call cannot simply repeat the same request -- the earlier
+                # oversized answer is still in context, so ask for the compact
+                # rewrite with the reply dropped.
+                if contract is not None:
+                    partial = _maybe_complete_partial(contract, text)
+                    if partial is not None:
+                        return partial
+                last_error = f"output cut off at the token budget after {len(text)} chars (finish_reason: length)"
+                messages.append({"role": "user", "content": TRUNCATION_REPAIR})
+                continue
             try:
                 data = _extract_json(text)
             except Exception as exc:
