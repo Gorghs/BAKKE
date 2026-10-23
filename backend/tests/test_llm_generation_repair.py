@@ -4,8 +4,9 @@ from types import SimpleNamespace
 
 import httpx
 import pytest
-from openai import BadRequestError
+from openai import APIConnectionError, BadRequestError
 
+from app.providers.base import MAX_HYPOTHESES_PER_CALL
 from app.providers.llm import OpenAILLMProvider
 
 
@@ -13,6 +14,11 @@ def _bad_request(message: str = "Failed to validate JSON. Please adjust your pro
     request = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
     response = httpx.Response(400, request=request)
     return BadRequestError(message, response=response, body={"error": {"message": message, "code": "json_validate_failed"}})
+
+
+def _connection_error() -> APIConnectionError:
+    request = httpx.Request("POST", "https://api.example.com/v1/chat/completions")
+    return APIConnectionError(request=request)
 
 
 def _completion(content: str, finish_reason: str | None = "stop") -> SimpleNamespace:
@@ -197,3 +203,156 @@ class TestGenerationRepair:
         with pytest.raises(ValueError, match="summarize_scenario"):
             p.run_task("summarize_scenario", {"scenario": {}})
         assert calls["n"] == 3
+
+    def test_connection_error_is_retried(self):
+        """A dropped connection is transient, not a bad request.
+
+        The SDK retries on its own budget first. Live, the route from the
+        container to the provider still lost a whole analysis run: two
+        extractions and the hypothesis call ended on "Connection error" while
+        the same calls succeeded seconds later.
+        """
+        calls = {"n": 0}
+
+        def create(**kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise _connection_error()
+            return _completion('{"summary": "ok"}')
+
+        out = _provider_with(create).run_task("summarize_scenario", {"scenario": {}})
+
+        assert out["summary"] == "ok"
+        assert calls["n"] == 2
+
+    def test_connection_errors_are_bounded(self):
+        calls = {"n": 0}
+
+        def create(**kwargs):
+            calls["n"] += 1
+            raise _connection_error()
+
+        p = _provider_with(create)
+        with pytest.raises(ValueError, match="connection error"):
+            p.run_task("summarize_scenario", {"scenario": {}})
+        assert calls["n"] == 3
+
+
+class TestHypothesisBudget:
+    """The hypothesis call runs on the same output budget as the extraction.
+
+    A candidate carries far more than a fact, so an unbounded hypothesis reply
+    runs past the budget and every attempt ends on the same cut (observed live:
+    3038 chars written, finish_reason=length, job failed on task
+    'generate_hypotheses'). The prompt bounds the candidate count and the
+    repair asks for a shorter set, and a cut that still holds complete
+    candidates is used as it stands.
+    """
+
+    def test_prompt_bounds_the_candidate_count(self):
+        prompt = OpenAILLMProvider(api_key="k", model="m", base_url="")._system_prompt("generate_hypotheses")
+        assert f"at most {MAX_HYPOTHESES_PER_CALL} hypotheses" in prompt
+
+    def test_expansion_prompt_bounds_the_candidate_count(self):
+        prompt = OpenAILLMProvider(api_key="k", model="m", base_url="")._system_prompt("expand_alternatives")
+        assert f"at most {MAX_HYPOTHESES_PER_CALL} new candidate" in prompt
+
+    def test_truncated_hypothesis_set_that_carries_candidates_is_kept(self):
+        calls = {"n": 0}
+
+        def create(**kwargs):
+            calls["n"] += 1
+            return _completion(
+                '{"hypotheses": [{"title": "Store opened with a second key",'
+                ' "summary": "The padlock was cut and a copy used.",'
+                ' "cause_claim": "A duplicate key was used.",'
+                ' "events": [{"description": "Door opened between 04:00 and 07:50."}]}],'
+                ' "extra": {"note": "cut here"',
+                finish_reason="length",
+            )
+
+        out = _provider_with(create).run_task("generate_hypotheses", {"facts": []})
+
+        assert calls["n"] == 1, "a usable partial must not be discarded for another call"
+        assert len(out["hypotheses"]) == 1
+        assert out["hypotheses"][0]["title"] == "Store opened with a second key"
+
+    def test_truncated_hypothesis_set_without_a_candidate_is_repaired(self):
+        seen: list[list] = []
+        outputs = iter(
+            [
+                _completion('{"hypotheses": [{"title": "Store opened', finish_reason="length"),
+                _completion('{"hypotheses": [{"title": "Store opened with a second key", "summary": "s"}]}'),
+            ]
+        )
+
+        def create(**kwargs):
+            seen.append(kwargs["messages"])
+            return next(outputs)
+
+        out = _provider_with(create).run_task("generate_hypotheses", {"facts": []})
+
+        assert len(seen) == 2, "a cut with no complete candidate must be re-called"
+        assert out["hypotheses"][0]["title"] == "Store opened with a second key"
+        repair = seen[1][-1]["content"]
+        assert "hypotheses" in repair, "the repair must ask for a shorter hypothesis set"
+        assert "timeline_events" not in repair, "the repair must not talk about the extraction schema"
+
+    def test_hypothesis_repair_drops_the_oversized_reply(self):
+        seen: list[list] = []
+        outputs = iter(
+            [
+                _completion('{"hypotheses": [{"title": "Store opened', finish_reason="length"),
+                _completion('{"hypotheses": [{"title": "Store opened with a second key"}]}'),
+            ]
+        )
+
+        def create(**kwargs):
+            seen.append(list(kwargs["messages"]))
+            return next(outputs)
+
+        _provider_with(create).run_task("generate_hypotheses", {"facts": []})
+
+        roles = [m["role"] for m in seen[1]]
+        assert "assistant" not in roles, "the cut reply must not be replayed to the model"
+
+
+class TestReasoningBudget:
+    """Reasoning-model endpoints (Groq gpt-oss) bill hidden reasoning tokens to
+    the same completion budget as the reply. At the default effort a 900-token
+    call came back with empty content and finish_reason "length": the reasoning
+    used the whole budget. reasoning_effort=low keeps the answer, and the
+    parameter stays off the request for endpoints that reject it."""
+
+    @staticmethod
+    def _settings(effort: str) -> SimpleNamespace:
+        return SimpleNamespace(
+            LLM_CALL_MIN_INTERVAL=0.0,
+            LLM_MAX_RETRIES=0,
+            LLM_MAX_OUTPUT_TOKENS=900,
+            LLM_REASONING_EFFORT=effort,
+        )
+
+    def _capture(self, monkeypatch, effort: str) -> dict:
+        from app.providers import llm as llm_module
+
+        monkeypatch.setattr(llm_module, "get_settings", lambda: self._settings(effort))
+        seen: dict = {}
+
+        def create(**kwargs):
+            seen.update(kwargs)
+            return _completion('{"summary": "ok"}')
+
+        provider = OpenAILLMProvider(api_key="k", model="m", base_url="")
+        provider.client.chat.completions.create = create
+        provider.run_task("summarize_scenario", {"scenario": {}})
+        return seen
+
+    def test_reasoning_effort_is_sent_when_configured(self, monkeypatch):
+        seen = self._capture(monkeypatch, "low")
+        assert seen["reasoning_effort"] == "low"
+        assert seen["max_tokens"] == 900
+
+    def test_reasoning_effort_is_omitted_when_unset(self, monkeypatch):
+        seen = self._capture(monkeypatch, "")
+        assert "reasoning_effort" not in seen

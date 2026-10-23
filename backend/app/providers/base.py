@@ -23,9 +23,20 @@ LLM_TASKS = {
     "similar_case_relevance": "Identify relevant analogical patterns from retrieved similar cases.",
     "compare_scenarios": "Compare scenarios to surface shared and differing elements.",
     "expand_video_prompt": (
-        "Rewrite a visual-only video generation prompt so it is compact and ready for a "
-        "text-to-video model. Keep every constraint, the shot structure and the exact "
-        "NOT RECORDED FOOTAGE label. Add no facts, no evidence, no reasoning, no people."
+        "Rewrite a visual-only video generation prompt into a richer cinematic brief for a "
+        "text-to-video model. Expand terse directions with setting, surface, light, "
+        "atmosphere, camera and motion detail, and keep an explicit time range for every "
+        "shot. Keep every constraint, the shot order and the exact NOT RECORDED FOOTAGE "
+        "label. Add no facts, no evidence, no reasoning, no people, no new objects and no "
+        "actions the source does not already state."
+    ),
+    "build_visual_brief": (
+        "Reduce a validated scenario to what a camera can show: the actors, the objects with "
+        "their start and end states, the actions in the order they happen, and what stays "
+        "continuous. Copy the wording of the input for every actor name, object name and action "
+        "verb; a name or an action the input does not state is an invention and is rejected. An "
+        "absence (no vehicle entered) is not an action: it belongs in absences, never in beats. "
+        "Add no evidence, witness, score or reasoning text."
     ),
 }
 
@@ -100,6 +111,15 @@ _EXTRACT_SCHEMA = {
 MAX_FACTS_PER_ITEM = 12
 
 
+# Candidate explanations one hypothesis call may return. Same budget problem as
+# the fact list: the model writes a long hypothesis per candidate and no bound,
+# so the JSON runs past the output budget and the call ends on a cut (observed
+# live: 3038 chars written, finish_reason=length, every attempt the same). A
+# hypothesis carries far more than a fact (title, summary, cause_claim, events),
+# so the count that fits is smaller than the fact count.
+MAX_HYPOTHESES_PER_CALL = 8
+
+
 # Output contract per task, embedded in real providers' prompts. The mock
 # provider ignores this (rule-based output already matches); a real model
 # guesses the structure without it and the caller's model_validate fails
@@ -123,6 +143,24 @@ TASK_RESPONSE_SCHEMAS: dict[str, str] = {
         }
     ),
     "expand_video_prompt": json.dumps({"prompt": "rewritten visual-only prompt"}),
+    "build_visual_brief": json.dumps(
+        {
+            "setting": "the yard and the store door",
+            "actors": [{"label": "Unknown person", "appearance": "", "clothing": ""}],
+            "props": [
+                {
+                    "label": "padlock",
+                    "start_state": "present",
+                    "end_state": "missing",
+                    "location": "store door",
+                }
+            ],
+            "beats": [{"clock": "19:12", "actor": "Unknown person", "action": "entered the yard"}],
+            "continuity": ["the space stays empty apart from the figure and the object"],
+            "absences": ["vehicle"],
+        },
+        separators=(",", ":"),
+    ),
 }
 
 # Tasks whose output has a Pydantic contract, used by real providers to
