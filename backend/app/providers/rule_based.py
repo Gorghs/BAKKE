@@ -10,6 +10,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.agents.visual_brief import brief_from_payload
+
 from app.config import get_settings
 
 settings = get_settings()
@@ -834,3 +836,16 @@ def mock_expand_video_prompt(payload: dict[str, Any]) -> dict[str, Any]:
     if not prompt:
         return {"prompt": "", "note": "no prompt supplied", "provider": "mock"}
     return {"prompt": prompt, "note": "mock returns the director prompt unchanged", "provider": "mock"}
+
+
+def mock_build_visual_brief(payload: dict[str, Any]) -> dict[str, Any]:
+    """Deterministic stand-in for the visual brief task.
+
+    It runs the same extractor the director falls back to, so the mock and the
+    real path produce the same shape and the same containment gate applies.
+    """
+    return {
+        **brief_from_payload(payload),
+        "note": "deterministic extraction",
+        "provider": "mock",
+    }

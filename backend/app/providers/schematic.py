@@ -132,11 +132,27 @@ def _render_frame(pixels, W, H, frame, total_frames, scene):
                     if 0 <= px < W and 0 <= py < H:
                         pixels[py * W + px] = tuple(min(255, 24 + int(40 * (0.5 + 0.5 * (t % 0.5) * 2))) for _ in range(3))
 
+    # Scenario clock: the same top right corner the prompt asks the renderer to use.
+    for tc in scene.get("timecodes", []):
+        if tc["start"] <= t < tc["end"]:
+            text = str(tc.get("clock") or "")
+            if text:
+                scale = 2
+                cell = 6 * scale + scale
+                text_w = cell * len(text)
+                x = W - 30 - text_w
+                y = 40
+                for py in range(y - 8, y + 16):
+                    for px in range(x - 8, x + text_w + 8):
+                        if 0 <= px < W and 0 <= py < H:
+                            pixels[py * W + px] = (15, 17, 24)
+                _draw_text(pixels, W, H, x, y, text, (240, 240, 245), scale=scale)
+            break
+
     # Bottom label bar
     for y in range(H - 56, H):
         for x in range(W):
             pixels[y * W + x] = (15, 17, 24)
-
     _draw_text(pixels, W, H, 30, H - 50, "BAKKE  |  " + scene.get("label", ""), (240, 240, 245), scale=2)
     _draw_text(pixels, W, H, 30, H - 26, "3D ANIMATED SCENARIO VISUALIZATION - NOT RECORDED FOOTAGE", (180, 180, 190), scale=1)
 
