@@ -81,9 +81,13 @@ class InvestigativeReasoningAgent(BaseAgent):
         raw = self.run_task("generate_hypotheses", payload)
         return HypothesisSet.model_validate(raw)
 
-    def expand(self, db: Session, case_id: str, rejected: dict[str, Any]) -> ExpansionResult:
+    def expand(self, db: Session, case_id: str, rejected: dict[str, Any], rejection_reason: str = "") -> ExpansionResult:
         payload = {
             "rejected_scenario": rejected,
+            # Without the reason the generator cannot avoid the conflict it just
+            # hit, so every expansion restates the mechanism that was rejected
+            # (live: 49 of 52 candidates were rewordings of "misplaced key").
+            "rejection_reason": rejection_reason,
             "facts": [_fact_dict(f) for f in db.query(Fact).filter_by(case_id=case_id).all()],
             "timeline": [
                 _timeline_dict(t)
