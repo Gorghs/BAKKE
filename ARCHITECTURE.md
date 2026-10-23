@@ -66,6 +66,10 @@ evidence ──extract──▶ facts + entities + findings
                   → weak / unexplored?  REVISE / EXPAND, regenerate
                           │
                           ▼
+         leftover validation (≤ MAX_LEFTOVER_VALIDATIONS candidates)
+                     re-check the candidates the loop left unvalidated
+                          │
+                          ▼
                     scoring + ranking (survivors)
                           │
                           ▼

@@ -27,7 +27,7 @@ The README, the Makefile and every command below assume that path. Build it on
 Python 3.12+ (`pyproject.toml` allows 3.11 and up, the Docker image runs 3.12).
 
 ```bash
-# tests: 71 items, ~13s, no services and no API keys
+# tests: 133 items, ~10s, no services and no API keys
 cd backend && DATABASE_URL="sqlite:///:memory:" ../.venv/bin/python -m pytest
 cd backend && ../.venv/bin/python -m pytest tests/test_forensic_rule.py   # one file
 cd backend && ../.venv/bin/python -m pytest -k zero_scenario              # one test
@@ -55,12 +55,17 @@ workflows. `npm run build` and `npm run lint` are the only automated checks.
 
 ## State of the suite
 
-All 71 tests pass on a clean checkout. The old isolation conflict is resolved:
+All 133 tests pass on a clean checkout. The old isolation conflict is resolved:
 `build_visual_spec` no longer puts `locations` or `injury_region` in the spec, so
 neither key can reach the prompt. Keep it that way — `test_video_isolation.py` is
 the guard. Forensic anchors are still passed to the director for conflict
 checking, but their content must never be stored in the spec or written into a
 prompt.
+
+The visual brief holds the same line. A model may fill it only if every label,
+action word and clock already appears in the scenario text, and continuity always
+comes from the deterministic extractor, because a model line there adds a rule the
+scenario never implies. `test_visual_brief.py` is the guard.
 
 ## Backend conventions
 
@@ -70,10 +75,13 @@ prompt.
   (`app/database.py`) commits at the end of the request, the worker commits its
   own session after each job, and sessions run with `autoflush=False`, so
   surrogate IDs stay unstable until an explicit flush.
-- Adding an LLM task takes two edits: register the name in `LLM_TASKS`
-  (`app/providers/base.py`) and add the matching `mock_<task>` function in
-  `app/providers/rule_based.py`. `MockLLMProvider.run_task` builds that name and
-  looks it up.
+- Adding an LLM task takes four edits: register the name in `LLM_TASKS` and its
+  response shape in `TASK_RESPONSE_SCHEMAS` (`app/providers/base.py`), add the
+  task's branch in `_system_prompt` and any truncation repair in
+  `TRUNCATION_REPAIR_BY_TASK` (`app/providers/llm.py`), and add the matching
+  `mock_<task>` function in `app/providers/rule_based.py`. `MockLLMProvider.run_task`
+  builds that name and looks it up, so a missing mock fails at run time, not
+  import time.
 - Provider choice resolves per call in `app/providers/registry.py`: database
   override (`PUT /api/providers`) then environment then default, and a missing
   API key forces the mock regardless of the provider name.
