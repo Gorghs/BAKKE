@@ -118,7 +118,6 @@ class AnalysisService:
         if not case:
             raise ValueError("case not found")
         case.status = "ANALYZING"
-        self._clear_derived_state(db, case_id)
         evidence_items = db.query(EvidenceItem).filter_by(case_id=case_id).all()
         db.flush()
 
@@ -169,6 +168,15 @@ class AnalysisService:
                 + "); no facts could be derived. Check the provider "
                 "configuration and the extraction_failed audit entries."
             )
+
+        # Clear only now, once extraction produced something to replace it with.
+        # The supervisor re-runs the whole pipeline on a retry, so the clear has
+        # to happen before fusion (appending triple-fused the same evidence
+        # live, 13 -> 38 facts). Doing it before extraction instead meant a
+        # retry that died on the provider left the case with nothing: the last
+        # good analysis was deleted and no new rows were written to take its
+        # place (observed live, attempt 3 of a requeued job).
+        self._clear_derived_state(db, case_id)
 
         # ---- 2. Fusion ----
         progress.report("Fusing evidence into knowledge graph", PCT_FUSION)

@@ -101,3 +101,29 @@ def test_failed_analysis_job_marks_case_error(monkeypatch, db, dev_user):
     assert "extract" in job.error.lower()
     db.refresh(case)
     assert case.status == "ERROR"
+
+
+def test_failed_retry_keeps_the_previous_analysis(monkeypatch, db, dev_user):
+    """A requeued run clears the old derived rows only once extraction produced
+    something to put in their place.
+
+    The clear used to run first, so a retry that died on the provider deleted the
+    previous analysis and wrote nothing back. Observed live: attempt 3 of a
+    requeued job wiped 13 timeline events and 15 scenarios, then hit a 429 on
+    every extraction, leaving the case emptier than it found it.
+    """
+    from app.models import Fact
+
+    case = make_case(db, dev_user, "Failed retry keeps prior analysis")
+    add_evidence(db, case, "E-001")
+    db.add(Fact(case_id=case.id, fact_id="F-001", statement="The store door was open at 07:50."))
+    db.commit()
+
+    monkeypatch.setattr(analysis_service, "get_extractor_agent", lambda item_type: BrokenExtractor())
+
+    with pytest.raises(RuntimeError):
+        AnalysisService().analyze_case(db, case.id)
+
+    db.expire_all()
+    kept = [fact.fact_id for fact in db.query(Fact).filter_by(case_id=case.id).all()]
+    assert kept == ["F-001"], "a failed retry must not delete the last good analysis"
