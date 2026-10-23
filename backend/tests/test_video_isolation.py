@@ -10,6 +10,10 @@ FORBIDDEN = [
     "E-003",
     "e-00",
     "witness",
+    "suspect",
+    "motive",
+    "score",
+    "probability",
     "similar case",
     "reference case",
     "hypothesis score",
@@ -88,6 +92,17 @@ class TestVideoPromptIsolation:
         assert "3D ANIMATED SCENARIO VISUALIZATION" in prompt
         assert "ANIMATION" in prompt and "SHOT LIST" in prompt
 
+        # Every second of the clip and the scenario's own clock must be named.
+        assert directed["total_duration"] == 10.0
+        assert directed["shots"][0]["start_seconds"] == 0.0
+        assert directed["shots"][-1]["end_seconds"] == 10.0
+        for previous, following in zip(directed["shots"], directed["shots"][1:]):
+            assert previous["end_seconds"] == following["start_seconds"]
+        assert "Shot 01 - 0.0s to" in prompt
+        assert "to 10.0s" in prompt
+        assert "20:05" in prompt
+        assert "evening" in prompt
+
     def test_visual_spec_excludes_reasoning_keys(self, db, dev_user):
         case = make_case(db, dev_user)
         hyp = Hypothesis(case_id=case.id, hypothesis_id="H-001", title="A", origin="INITIAL", extra={})
@@ -116,6 +131,11 @@ class TestVideoPromptIsolation:
             "title",
             "environment",
             "characters",
+            "props",
+            "beats",
+            "continuity",
+            "absences",
+            "unshown",
             "objects",
             "unknown_periods",
             "aspect_ratio",

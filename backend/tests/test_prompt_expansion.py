@@ -10,7 +10,11 @@ ENVIRONMENT:
 An interior scene comprising: Hallway.
 
 SHOT LIST:
-Shot 01 (4.0s): Establishing view of the hallway. Camera: wide static shot.
+Shot 01 - 0.0s to 4.0s (4.0s): Establishing view of the hallway. Camera: wide static shot.
+Shot 02 - 4.0s to 8.0s (4.0s): The hallway holds, empty. Camera: slow push-in.
+
+CONSTRAINTS:
+Do not add people. Do not add objects.
 
 OUTPUT:
 16:9 High-quality 3D animated video. Label overlay: "BAKKE | HYPOTHESIS H-001 | 3D ANIMATED SCENARIO VISUALIZATION | NOT RECORDED FOOTAGE"."""
@@ -85,11 +89,28 @@ class TestExpandVisualPrompt:
         assert meta["used"] is False
 
     def test_oversized_expansion_is_rejected(self, monkeypatch):
-        llm = _FakeLLM(reply={"prompt": "x" * 3000 + " NOT RECORDED FOOTAGE"})
+        llm = _FakeLLM(reply={"prompt": "x" * 6500 + " NOT RECORDED FOOTAGE"})
         _use_llm(monkeypatch, llm)
         out, meta = expand_visual_prompt(RAW_PROMPT)
         assert out == RAW_PROMPT
         assert meta["used"] is False
+
+    def test_expansion_that_drops_the_constraints_is_rejected(self, monkeypatch):
+        llm = _FakeLLM(reply={"prompt": RAW_PROMPT.replace("CONSTRAINTS:", "NOTES:")})
+        _use_llm(monkeypatch, llm)
+        out, meta = expand_visual_prompt(RAW_PROMPT)
+        assert out == RAW_PROMPT
+        assert meta["used"] is False
+        assert "CONSTRAINTS" in meta["reason"]
+
+    def test_expansion_that_drops_the_timestamps_is_rejected(self, monkeypatch):
+        stripped = RAW_PROMPT.replace("0.0s to 4.0s", "the first shot").replace("4.0s to 8.0s", "the second shot")
+        llm = _FakeLLM(reply={"prompt": stripped})
+        _use_llm(monkeypatch, llm)
+        out, meta = expand_visual_prompt(RAW_PROMPT)
+        assert out == RAW_PROMPT
+        assert meta["used"] is False
+        assert "timestamp" in meta["reason"]
 
     def test_provider_error_falls_back(self, monkeypatch):
         llm = _FakeLLM(exc=RuntimeError("boom"))
@@ -101,7 +122,7 @@ class TestExpandVisualPrompt:
 
 
 class TestBuildSpecRunsExpansion:
-    def test_spec_records_expanded_and_director_prompts(self, db, dev_user):
+    def _scenario(self, db, dev_user):
         case = make_case(db, dev_user)
         hyp = Hypothesis(case_id=case.id, hypothesis_id="H-001", title="A", origin="INITIAL", extra={})
         db.add(hyp)
@@ -132,9 +153,23 @@ class TestBuildSpecRunsExpansion:
             )
         )
         db.commit()
+        return sc
 
-        spec_row = VideoService().build_spec(db, sc)
-        spec = spec_row.spec
+    def test_expansion_is_off_by_default(self, db, dev_user):
+        sc = self._scenario(db, dev_user)
+        spec = VideoService().build_spec(db, sc).spec
+        assert spec["visual_prompt"] == spec["visual_prompt_director"]
+        assert spec["visual_prompt"].endswith('NOT RECORDED FOOTAGE".')
+        meta = spec["prompt_expansion"]
+        assert meta["used"] is False
+        assert "disabled" in meta["reason"]
+
+    def test_expansion_runs_when_enabled(self, db, dev_user, monkeypatch):
+        from app.services import video_service
+
+        monkeypatch.setattr(video_service.settings, "VIDEO_PROMPT_EXPANSION", True)
+        sc = self._scenario(db, dev_user)
+        spec = VideoService().build_spec(db, sc).spec
         assert spec["visual_prompt"] == spec["visual_prompt_director"]
         assert spec["visual_prompt"].endswith('NOT RECORDED FOOTAGE".')
         meta = spec["prompt_expansion"]
