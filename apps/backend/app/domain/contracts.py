@@ -4,6 +4,12 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
+# Generation budget per call. A reply that carries more than this runs past the
+# output token budget and is cut mid-JSON, which loses the tail of the answer.
+# The prompt files state the same numbers; a test keeps the two in step.
+MAX_FACTS_PER_ITEM = 12
+MAX_HYPOTHESES_PER_CALL = 8
+
 
 class SourceRef(BaseModel):
     evidence_id: str = ""

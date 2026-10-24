@@ -144,7 +144,7 @@ def test_live_provider_without_key_fails_clearly():
 def test_catalogue_and_validation():
     known = known_provider_types()
     assert known["text"] == ["http_chat", "mock"]
-    assert set(known["video_generation"]) == {"mock", "kling", "runway", "hailuo"}
+    assert set(known["video_generation"]) == {"mock", "gemini-web", "kling", "runway", "hailuo"}
     assert validate_provider_types() == []
 
 

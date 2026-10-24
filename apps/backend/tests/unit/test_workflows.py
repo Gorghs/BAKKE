@@ -295,7 +295,7 @@ def test_known_provider_types_match_catalogue():
         "speech": ["http_chat", "mock"],
         "vision": ["http_chat", "mock"],
         "video_understanding": ["http_chat", "mock"],
-        "video_generation": ["hailuo", "kling", "mock", "runway"],
+        "video_generation": ["gemini-web", "hailuo", "kling", "mock", "runway"],
     }
     assert validate_provider_types() == []
 

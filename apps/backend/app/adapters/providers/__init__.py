@@ -25,6 +25,7 @@ from app.adapters.media.mock import (
     MockVideoUnderstandingProvider,
 )
 from app.adapters.media.vendor_video import (
+    GeminiWebVideoProvider,
     HailuoProvider,
     KlingProvider,
     MockVideoGenerationProvider,
@@ -34,6 +35,11 @@ from app.config import CAPABILITIES, ResolvedCapability, get_settings, resolve_c
 
 HTTP_CHAT = "http_chat"
 MOCK = "mock"
+
+# Adapters that authenticate with a base URL instead of an API key: a
+# self-hosted bridge on the same host has no credential to supply, so requiring
+# one would make a working configuration look broken.
+_KEYLESS_TYPES = frozenset({"gemini-web"})
 
 _KNOWN_TYPES: dict[str, dict[str, Callable[[ResolvedCapability], Any]]] = {
     "text": {
@@ -58,6 +64,7 @@ _KNOWN_TYPES: dict[str, dict[str, Callable[[ResolvedCapability], Any]]] = {
     },
     "video_generation": {
         MOCK: lambda cfg: MockVideoGenerationProvider(),
+        "gemini-web": GeminiWebVideoProvider,
         "kling": KlingProvider,
         "runway": RunwayProvider,
         "hailuo": HailuoProvider,
@@ -109,7 +116,13 @@ def _build(capability: str, cfg: ResolvedCapability, *, force_mock: bool = False
             f"configured. Set {CAPABILITIES[capability].generic_api_key_key} / "
             f"{CAPABILITIES[capability].generic_base_url_key}, or select '{MOCK}' explicitly."
         )
-    if cfg.provider_type not in (MOCK, "") and not cfg.api_key:
+    if cfg.provider_type in _KEYLESS_TYPES and not cfg.api_base_url:
+        raise ProviderConfigurationError(
+            f"capability '{capability}' uses '{cfg.provider_type}' but "
+            f"{CAPABILITIES[capability].generic_base_url_key} is empty — this adapter talks to a "
+            "self-hosted service and needs its address."
+        )
+    if cfg.provider_type not in (MOCK, "") and cfg.provider_type not in _KEYLESS_TYPES and not cfg.api_key:
         raise ProviderConfigurationError(
             f"capability '{capability}' uses '{cfg.provider_type}' but {CAPABILITIES[capability].generic_api_key_key} is empty."
         )
@@ -237,9 +250,13 @@ def validate_provider_types() -> list[str]:
                 f"(known: {', '.join(sorted(_KNOWN_TYPES[capability]))})"
             )
             continue
-        if cfg.provider_type != HTTP_CHAT:
+        if cfg.provider_type != HTTP_CHAT and cfg.provider_type not in _KEYLESS_TYPES:
             if not cfg.api_key:
                 errors.append(
                     f"{CAPABILITIES[capability].generic_api_key_key}: required for provider type {cfg.provider_type!r}"
                 )
+        if cfg.provider_type in _KEYLESS_TYPES and not cfg.api_base_url:
+            errors.append(
+                f"{CAPABILITIES[capability].generic_base_url_key}: required for provider type {cfg.provider_type!r}"
+            )
     return errors

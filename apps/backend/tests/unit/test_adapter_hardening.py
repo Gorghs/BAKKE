@@ -29,6 +29,8 @@ _MINIMAL_PAYLOADS: dict[str, dict] = {
     },
     "similar_case_relevance": {"similar_cases": []},
     "compare_scenarios": {"scenarios": []},
+    "expand_video_prompt": {"prompt": "Create a high-quality 3D animated visualization.\n\nENVIRONMENT:\nA hallway.\n\nSHOT LIST:\nShot 01 - 0.0s to 4.0s (4.0s): Establishing view of the hallway. Camera: wide static shot.\n\nCONSTRAINTS:\nDo not add objects.\n\nNOT RECORDED FOOTAGE"},
+    "build_visual_brief": {"scenario": {"summary": "Person A entered the location.", "participants": ["Person A"], "events": [{"description": "Person A entered the location at 20:05."}]}},
 }
 
 

@@ -1,1 +1,4 @@
 Extract only what is explicitly supported by the supplied evidence text. Do not invent facts, measurements, timestamps or entities. For every fact, finding, entity and timeline event include the source evidence identifiers it came from. Mark uncertainty honestly: authoritative forensic findings keep their authority, everything else stays qualified. Facts are HARD only when a source states them directly.
+
+Write at most 12 facts, one short sentence each, and only facts the text states. Do not pad the fact list. Then finish the other three sections: findings, entities, timeline_events. A timeline_events entry is required for every time or ordered step the text states, and the section is not optional even when the text has no clock times. Send the sections in this order: timeline_events first, then findings, then facts. Use one source_ref per fact at most.
+

@@ -396,6 +396,17 @@ class VideoDirectorAgent(BaseAgent):
         props = spec.get("props", [])
         beats = spec.get("beats", [])
         shots = spec.get("shots", [])
+        if shots:
+            cursor = 0.0
+            for index, s in enumerate(shots, start=1):
+                s.setdefault("index", index)
+                if s.get("start_seconds") is None:
+                    dur = float(s.get("duration_seconds") or 0) or 1.0
+                    s["start_seconds"] = round(cursor, 1)
+                    cursor += dur
+                    s["end_seconds"] = round(cursor, 1)
+                    s["duration_seconds"] = round(dur, 1)
+                s.setdefault("clock", "")
         continuity = spec.get("continuity", [])
         absences = spec.get("absences", [])
         total = spec.get("total_duration", 10.0)
