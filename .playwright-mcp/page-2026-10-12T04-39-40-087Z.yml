@@ -1,0 +1,100 @@
+- generic [active] [ref=f5e1]:
+  - banner [ref=f5e4]:
+    - generic [ref=f5e7]:
+      - link "Bakke Command Evidence-Constrained Intelligence" [ref=f5e8] [cursor=pointer]:
+        - /url: /
+        - img [ref=f5e10]:
+          - generic [ref=f5e13]: B
+        - generic [ref=f5e15]:
+          - generic [ref=f5e16]: Bakke Command
+          - generic [ref=f5e17]: Evidence-Constrained Intelligence
+      - navigation [ref=f5e18]:
+        - link "Command" [ref=f5e19] [cursor=pointer]:
+          - /url: /
+        - link "Case Board" [ref=f5e20] [cursor=pointer]:
+          - /url: /cases
+      - generic [ref=f5e22]:
+        - generic [ref=f5e23]: Live Providers
+        - generic [ref=f5e25]: 10:09:39Z
+        - generic [ref=f5e26]: STN-07
+  - generic [ref=f5e28]:
+    - generic [ref=f5e29]:
+      - generic [ref=f5e30]:
+        - generic [ref=f5e31]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=f5e32]:
+        - generic [ref=f5e33]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=f5e34]:
+        - generic [ref=f5e35]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=f5e36]:
+        - generic [ref=f5e37]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=f5e38]:
+        - generic [ref=f5e39]: ▸
+        - text: EVERY STEP IS AUDITED
+    - generic [ref=f5e40]:
+      - generic [ref=f5e41]:
+        - generic [ref=f5e42]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=f5e43]:
+        - generic [ref=f5e44]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=f5e45]:
+        - generic [ref=f5e46]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=f5e47]:
+        - generic [ref=f5e48]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=f5e49]:
+        - generic [ref=f5e50]: ▸
+        - text: EVERY STEP IS AUDITED
+  - main [ref=f5e51]:
+    - generic [ref=f5e52]:
+      - generic [ref=f5e53]:
+        - generic [ref=f5e54]:
+          - generic [ref=f5e55]: Case file
+          - generic [ref=f5e56]: "#5241341d"
+          - heading "Clinic dispensary medication loss — 27 September" [level=1] [ref=f5e58]
+          - generic [ref=f5e59]: ANALYZED
+        - paragraph [ref=f5e61]: Reported loss of controlled medication from the clinic dispensary, discovered 27 September. Last confirmed present at the 18:00 stock count on 26 September.
+        - generic [ref=f5e62]:
+          - generic [ref=f5e63]: demo
+          - generic [ref=f5e64]: property
+      - navigation [ref=f5e65]:
+        - link "01 Overview" [ref=f5e66] [cursor=pointer]:
+          - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445
+          - generic [ref=f5e67]: "01"
+          - text: Overview
+        - link "02 Evidence" [ref=f5e69] [cursor=pointer]:
+          - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/evidence
+          - generic [ref=f5e70]: "02"
+          - text: Evidence
+        - link "03 Timeline" [ref=f5e71] [cursor=pointer]:
+          - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/timeline
+          - generic [ref=f5e72]: "03"
+          - text: Timeline
+        - link "04 Scenarios" [ref=f5e73] [cursor=pointer]:
+          - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/scenarios
+          - generic [ref=f5e74]: "04"
+          - text: Scenarios
+        - link "05 Compare" [ref=f5e75] [cursor=pointer]:
+          - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/compare
+          - generic [ref=f5e76]: "05"
+          - text: Compare
+        - link "06 Visualization" [ref=f5e77] [cursor=pointer]:
+          - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/visualization
+          - generic [ref=f5e78]: "06"
+          - text: Visualization
+        - link "07 Audit" [ref=f5e79] [cursor=pointer]:
+          - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/audit
+          - generic [ref=f5e80]: "07"
+          - text: Audit
+      - generic [ref=f5e81]: scanning
+  - contentinfo [ref=f5e85]:
+    - generic [ref=f5e86]:
+      - generic [ref=f5e87]: BAKKE Command Interface
+      - generic [ref=f5e88]: Evidence Consistency Scores ≠ Probability
+      - generic [ref=f5e89]: Secure Channel
+  - alert [ref=f5e91]

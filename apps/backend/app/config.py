@@ -226,6 +226,15 @@ class Settings(BaseSettings):
     VIDEO_GENERATION_API_BASE_URL: str = ""
     VIDEO_GENERATION_API_KEY: str = ""
     VIDEO_GENERATION_MODEL: str = ""
+    # Optional LLM rewrite of the visual prompt. Off keeps the director prompt,
+    # which names only what the scenario states. On adds cinematic prose but can
+    # describe fixtures and materials the scenario never states.
+    VIDEO_PROMPT_EXPANSION: bool = False
+    # Optional LLM-filled visual brief: setting, actors, props with their start and
+    # end state, ordered beats, continuity. Every label, action word and clock must
+    # already appear in the scenario text, or the brief is rejected and the
+    # deterministic extractor is used instead.
+    VIDEO_VISUAL_BRIEF: bool = True
 
     # --- Legacy names (compatibility only; see CAPABILITIES) ---------------
     LLM_PROVIDER: str = "mock"

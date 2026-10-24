@@ -828,3 +828,19 @@ def mock_compare(payload: dict[str, Any]) -> dict[str, Any]:
         "note": "Comparison is descriptive; no probability claim is made.",
         "provider": "mock",
     }
+
+def mock_expand_video_prompt(payload: dict[str, Any]) -> dict[str, Any]:
+    """Deterministic pass-through: keep the director prompt unchanged.
+
+    The prompt is already visual-only with shots, clocks and constraints; adding
+    no facts is the whole point.
+    """
+    prompt = str(payload.get("prompt") or "")
+    return {"prompt": prompt}
+
+
+def mock_build_visual_brief(payload: dict[str, Any]) -> dict[str, Any]:
+    """Deterministic brief derived from the scenario payload."""
+    from app.features.visualization.visual_brief import brief_from_payload
+
+    return brief_from_payload(payload)

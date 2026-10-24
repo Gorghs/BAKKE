@@ -17,6 +17,8 @@ _TASK_IMPLEMENTATIONS: dict[str, str] = {
     "summarize_scenario": "mock_summarize",
     "similar_case_relevance": "mock_similar_case_relevance",
     "compare_scenarios": "mock_compare",
+    "expand_video_prompt": "mock_expand_video_prompt",
+    "build_visual_brief": "mock_build_visual_brief",
 }
 
 

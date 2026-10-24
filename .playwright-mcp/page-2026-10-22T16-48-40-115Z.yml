@@ -1,0 +1,97 @@
+- generic [active] [ref=f6e1]:
+  - banner [ref=f6e4]:
+    - generic [ref=f6e7]:
+      - link "Bakke Command Evidence-Constrained Intelligence" [ref=f6e8] [cursor=pointer]:
+        - /url: /
+        - img [ref=f6e10]:
+          - generic [ref=f6e13]: B
+        - generic [ref=f6e15]:
+          - generic [ref=f6e16]: Bakke Command
+          - generic [ref=f6e17]: Evidence-Constrained Intelligence
+      - navigation [ref=f6e18]:
+        - link "Command" [ref=f6e19] [cursor=pointer]:
+          - /url: /
+        - link "Case Board" [ref=f6e20] [cursor=pointer]:
+          - /url: /cases
+      - generic [ref=f6e22]:
+        - generic [ref=f6e23]: Live Providers
+        - generic [ref=f6e25]: 22:18:39Z
+        - generic [ref=f6e26]: STN-07
+  - generic [ref=f6e28]:
+    - generic [ref=f6e29]:
+      - generic [ref=f6e30]:
+        - generic [ref=f6e31]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=f6e32]:
+        - generic [ref=f6e33]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=f6e34]:
+        - generic [ref=f6e35]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=f6e36]:
+        - generic [ref=f6e37]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=f6e38]:
+        - generic [ref=f6e39]: ▸
+        - text: EVERY STEP IS AUDITED
+    - generic [ref=f6e40]:
+      - generic [ref=f6e41]:
+        - generic [ref=f6e42]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=f6e43]:
+        - generic [ref=f6e44]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=f6e45]:
+        - generic [ref=f6e46]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=f6e47]:
+        - generic [ref=f6e48]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=f6e49]:
+        - generic [ref=f6e50]: ▸
+        - text: EVERY STEP IS AUDITED
+  - main [ref=f6e51]:
+    - generic [ref=f6e52]:
+      - generic [ref=f6e53]:
+        - generic [ref=f6e54]:
+          - generic [ref=f6e55]: Case file
+          - generic [ref=f6e56]: "#f7209e22"
+          - heading "Missing tools" [level=1] [ref=f6e58]
+          - generic [ref=f6e59]: ANALYZED
+        - paragraph [ref=f6e61]: Hand tools were taken from a locked store on the night of 5 March. The store was locked at 18:05 and found open at 07:50 the next morning.
+      - navigation [ref=f6e62]:
+        - link "01 Overview" [ref=f6e63] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e
+          - generic [ref=f6e64]: "01"
+          - text: Overview
+        - link "02 Evidence" [ref=f6e65] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/evidence
+          - generic [ref=f6e66]: "02"
+          - text: Evidence
+        - link "03 Timeline" [ref=f6e67] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/timeline
+          - generic [ref=f6e68]: "03"
+          - text: Timeline
+        - link "04 Scenarios" [ref=f6e69] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/scenarios
+          - generic [ref=f6e70]: "04"
+          - text: Scenarios
+        - link "05 Compare" [ref=f6e71] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/compare
+          - generic [ref=f6e72]: "05"
+          - text: Compare
+        - link "06 Visualization" [ref=f6e73] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/visualization
+          - generic [ref=f6e74]: "06"
+          - text: Visualization
+        - link "07 Audit" [ref=f6e76] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/audit
+          - generic [ref=f6e77]: "07"
+          - text: Audit
+      - generic [ref=f6e78]: scanning
+  - contentinfo [ref=f6e82]:
+    - generic [ref=f6e83]:
+      - generic [ref=f6e84]: BAKKE Command Interface
+      - generic [ref=f6e85]: Evidence Consistency Scores ≠ Probability
+      - generic [ref=f6e86]: Secure Channel
+  - alert [ref=f6e88]

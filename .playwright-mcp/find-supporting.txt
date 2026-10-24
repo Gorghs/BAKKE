@@ -1,0 +1,53 @@
+Found 4 matches for "supporting":
+
+- generic [active] [ref=f6e1]:
+  - main [ref=f6e51]:
+    - generic [ref=f6e52]:
+      - generic [ref=f6e92]:
+        - generic [ref=f6e142]:
+          - generic [ref=f6e143]:
+            ...
+            - link "View all ▸" [ref=f6e145] [cursor=pointer]:
+              - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/scenarios
+          - generic [ref=f6e146]:
+            - link "H-007 SURVIVING 100 The dispensary cabinet was left unlocked and the rear fire exit unlatched around 18:05, enabling a potential insider-facilitated or opportunistic entry by an external party at ~22:45 via the unmonitored rear alley to retrieve medication without forced entry. Clinic insider/staff member External accomplice (person in dark clothing) 5 supporting · 0 unknown" [ref=f6e147] [cursor=pointer]:
+              - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/scenarios/bdc58977-c5f9-4f4b-ba98-7a386068a811
+              - generic [ref=f6e148]:
+                - generic [ref=f6e149]:
+
+----
+
+- generic [active] [ref=f6e1]:
+  - main [ref=f6e51]:
+    - generic [ref=f6e52]:
+      - generic [ref=f6e92]:
+        - generic [ref=f6e142]:
+          - generic [ref=f6e146]:
+            - link "H-007 SURVIVING 100 The dispensary cabinet was left unlocked and the rear fire exit unlatched around 18:05, enabling a potential insider-facilitated or opportunistic entry by an external party at ~22:45 via the unmonitored rear alley to retrieve medication without forced entry. Clinic insider/staff member External accomplice (person in dark clothing) 5 supporting · 0 unknown" [ref=f6e147] [cursor=pointer]:
+              - generic [ref=f6e148]:
+                - generic [ref=f6e160]:
+                  - generic [ref=f6e161]: Clinic insider/staff member
+                  - generic [ref=f6e162]: External accomplice (person in dark clothing)
+                  - generic [ref=f6e163]: 5 supporting · 0 unknown
+            - link "H-004 SURVIVING 100 An unidentified external perpetrator accessed the clinic via the unlatched rear fire exit door during the unmonitored overnight window without forcing locks, accessed the unlocked medication cabinet, and exited through the rear service alley. Unidentified perpetrator in dark clothing 4 supporting · 0 unknown" [ref=f6e164] [cursor=pointer]:
+              - /url: /cases/5241341d-2c6d-408a-a8d1-74e60da71445/scenarios/003cd8ab-e959-4bf4-a43b-b862392328f3
+              - generic [ref=f6e165]:
+                - generic [ref=f6e166]:
+
+----
+
+- generic [active] [ref=f6e1]:
+  - main [ref=f6e51]:
+    - generic [ref=f6e52]:
+      - generic [ref=f6e92]:
+        - generic [ref=f6e142]:
+          - generic [ref=f6e146]:
+            - link "H-004 SURVIVING 100 An unidentified external perpetrator accessed the clinic via the unlatched rear fire exit door during the unmonitored overnight window without forcing locks, accessed the unlocked medication cabinet, and exited through the rear service alley. Unidentified perpetrator in dark clothing 4 supporting · 0 unknown" [ref=f6e164] [cursor=pointer]:
+              - generic [ref=f6e165]:
+                - paragraph [ref=f6e176]: An unidentified external perpetrator accessed the clinic via the unlatched rear fire exit door during the unmonitored overnight window without forcing locks, accessed the unlocked medication cabinet, and exited through the rear service alley.
+                - generic [ref=f6e177]:
+                  - generic [ref=f6e178]: Unidentified perpetrator in dark clothing
+                  - generic [ref=f6e179]: 4 supporting · 0 unknown
+  - contentinfo [ref=f6e81]:
+    - generic [ref=f6e82]:
+      - generic [ref=f6e83]: BAKKE Command Interface

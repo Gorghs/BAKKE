@@ -1,0 +1,182 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e4]:
+    - generic [ref=e7]:
+      - link "Bakke Command Evidence-Constrained Intelligence" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - img [ref=e10]:
+          - generic [ref=e13]: B
+        - generic [ref=e15]:
+          - generic [ref=e16]: Bakke Command
+          - generic [ref=e17]: Evidence-Constrained Intelligence
+      - navigation [ref=e18]:
+        - link "Command" [ref=e19] [cursor=pointer]:
+          - /url: /
+        - link "Case Board" [ref=e21] [cursor=pointer]:
+          - /url: /cases
+      - generic [ref=e22]:
+        - generic [ref=e23]: Dev Mock Mode
+        - generic [ref=e25]: 20:03:46Z
+        - generic [ref=e26]: STN-07
+  - generic [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=e32]:
+        - generic [ref=e33]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=e34]:
+        - generic [ref=e35]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=e36]:
+        - generic [ref=e37]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=e38]:
+        - generic [ref=e39]: ▸
+        - text: EVERY STEP IS AUDITED
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=e43]:
+        - generic [ref=e44]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=e45]:
+        - generic [ref=e46]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=e47]:
+        - generic [ref=e48]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=e49]:
+        - generic [ref=e50]: ▸
+        - text: EVERY STEP IS AUDITED
+  - main [ref=e51]:
+    - generic [ref=e217]:
+      - generic [ref=e218]:
+        - generic [ref=e219]:
+          - generic [ref=e220]: Case file
+          - generic [ref=e221]: "#f7209e22"
+          - heading "Missing tools" [level=1] [ref=e223]
+          - generic [ref=e224]: DRAFT
+        - paragraph [ref=e226]: Hand tools were taken from a locked store on the night of 5 March. The store was locked at 18:05 and found open at 07:50 the next morning.
+      - navigation [ref=e227]:
+        - link "01 Overview" [ref=e228] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e
+          - generic [ref=e229]: "01"
+          - text: Overview
+        - link "02 Evidence" [ref=e231] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/evidence
+          - generic [ref=e232]: "02"
+          - text: Evidence
+        - link "03 Timeline" [ref=e233] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/timeline
+          - generic [ref=e234]: "03"
+          - text: Timeline
+        - link "04 Scenarios" [ref=e235] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/scenarios
+          - generic [ref=e236]: "04"
+          - text: Scenarios
+        - link "05 Compare" [ref=e237] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/compare
+          - generic [ref=e238]: "05"
+          - text: Compare
+        - link "06 Visualization" [ref=e239] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/visualization
+          - generic [ref=e240]: "06"
+          - text: Visualization
+        - link "07 Audit" [ref=e241] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/audit
+          - generic [ref=e242]: "07"
+          - text: Audit
+      - generic [ref=e301]:
+        - generic [ref=e302]:
+          - generic [ref=e303]:
+            - heading "▸ Evidence items" [level=2] [ref=e304]
+            - generic [ref=e305]: 5 items
+          - generic [ref=e326]:
+            - generic [ref=e327]:
+              - generic [ref=e329]:
+                - generic [ref=e330]:
+                  - generic [ref=e331]: E-001
+                  - generic [ref=e332]: WITNESS_STATEMENT
+                  - generic [ref=e333]: UPLOADED
+                - paragraph [ref=e335]: Depot supervisor statement, 6 March
+              - generic [ref=e336]:
+                - generic [ref=e337]: pending
+                - generic [ref=e338]: 22/10/2026, 20:01
+            - generic [ref=e339]:
+              - generic [ref=e341]:
+                - generic [ref=e342]:
+                  - generic [ref=e343]: E-002
+                  - generic [ref=e344]: DIGITAL_RECORD
+                  - generic [ref=e345]: UPLOADED
+                - paragraph [ref=e347]: Gate log extract, 5-6 March
+              - generic [ref=e348]:
+                - generic [ref=e349]: pending
+                - generic [ref=e350]: 22/10/2026, 20:02
+            - generic [ref=e351]:
+              - generic [ref=e353]:
+                - generic [ref=e354]:
+                  - generic [ref=e355]: E-003
+                  - generic [ref=e356]: PHYSICAL_EVIDENCE
+                  - generic [ref=e357]: UPLOADED
+                - paragraph [ref=e359]: Store inventory note, 6 March
+              - generic [ref=e360]:
+                - generic [ref=e361]: pending
+                - generic [ref=e362]: 22/10/2026, 20:02
+            - generic [ref=e363]:
+              - generic [ref=e365]:
+                - generic [ref=e366]:
+                  - generic [ref=e367]: E-004
+                  - generic [ref=e368]: LOCATION_RECORD
+                  - generic [ref=e369]: UPLOADED
+                - paragraph [ref=e371]: Yard layout record
+              - generic [ref=e372]:
+                - generic [ref=e373]: pending
+                - generic [ref=e374]: 22/10/2026, 20:03
+            - generic [ref=e375]:
+              - generic [ref=e377]:
+                - generic [ref=e378]:
+                  - generic [ref=e379]: E-005
+                  - generic [ref=e380]: WITNESS_STATEMENT
+                  - generic [ref=e381]: UPLOADED
+                - paragraph [ref=e383]: Night guard statement, 6 March
+              - generic [ref=e384]:
+                - generic [ref=e385]: pending
+                - generic [ref=e386]: 22/10/2026, 20:03
+        - generic [ref=e309]:
+          - heading "▸ Log evidence" [level=2] [ref=e310]
+          - generic [ref=e311]:
+            - generic [ref=e312]:
+              - generic [ref=e313]: Type
+              - combobox [ref=e314]:
+                - option "INVESTIGATOR_REPORT"
+                - option "WITNESS_STATEMENT" [selected]
+                - option "FORENSIC_REPORT"
+                - option "POST_MORTEM_REPORT"
+                - option "PHYSICAL_EVIDENCE"
+                - option "DIGITAL_RECORD"
+                - option "LOCATION_RECORD"
+                - option "DOCUMENT"
+                - option "TEXT"
+                - option "AUDIO"
+                - option "IMAGE"
+                - option "VIDEO"
+                - option "OTHER"
+            - generic [ref=e315]:
+              - generic [ref=e316]: Title
+              - textbox "Post-mortem report…" [ref=e317]
+            - generic [ref=e318]:
+              - generic [ref=e319]: Text content
+              - textbox "Paste or describe the evidence…" [ref=e320]
+            - generic [ref=e321]:
+              - generic [ref=e322]: Or attach file
+              - button "Choose File" [ref=e323]
+            - button "Log evidence" [disabled] [ref=e324]
+          - paragraph [ref=e325]: After logging evidence, run analysis from Overview to extract facts, find constraints and generate scenario candidates.
+  - contentinfo [ref=e105]:
+    - generic [ref=e106]:
+      - generic [ref=e107]: BAKKE Command Interface
+      - generic [ref=e108]: Evidence Consistency Scores ≠ Probability
+      - generic [ref=e109]: Secure Channel
+  - alert [ref=e111]

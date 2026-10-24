@@ -1,0 +1,129 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e4]:
+    - generic [ref=f1e7]:
+      - link "Bakke Command Evidence-Constrained Intelligence" [ref=f1e8] [cursor=pointer]:
+        - /url: /
+        - img [ref=f1e10]:
+          - generic [ref=f1e13]: B
+        - generic [ref=f1e15]:
+          - generic [ref=f1e16]: Bakke Command
+          - generic [ref=f1e17]: Evidence-Constrained Intelligence
+      - navigation [ref=f1e18]:
+        - link "Command" [ref=f1e19] [cursor=pointer]:
+          - /url: /
+        - link "Case Board" [ref=f1e20] [cursor=pointer]:
+          - /url: /cases
+      - generic [ref=f1e22]:
+        - generic [ref=f1e23]: Live Providers
+        - generic [ref=f1e25]: 08:27:47Z
+        - generic [ref=f1e26]: STN-07
+  - generic [ref=f1e28]:
+    - generic [ref=f1e29]:
+      - generic [ref=f1e30]:
+        - generic [ref=f1e31]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=f1e32]:
+        - generic [ref=f1e33]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=f1e34]:
+        - generic [ref=f1e35]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=f1e36]:
+        - generic [ref=f1e37]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=f1e38]:
+        - generic [ref=f1e39]: ▸
+        - text: EVERY STEP IS AUDITED
+    - generic [ref=f1e40]:
+      - generic [ref=f1e41]:
+        - generic [ref=f1e42]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=f1e43]:
+        - generic [ref=f1e44]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=f1e45]:
+        - generic [ref=f1e46]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=f1e47]:
+        - generic [ref=f1e48]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=f1e49]:
+        - generic [ref=f1e50]: ▸
+        - text: EVERY STEP IS AUDITED
+  - main [ref=f1e51]:
+    - generic [ref=f1e52]:
+      - generic [ref=f1e53]:
+        - generic [ref=f1e54]:
+          - generic [ref=f1e55]: Case file
+          - generic [ref=f1e56]: "#79f7784a"
+          - heading "Clinic dispensary medication loss — 27 September" [level=1] [ref=f1e58]
+          - generic [ref=f1e59]: DRAFT
+        - paragraph [ref=f1e61]: Fictional worked example. Controlled medication was found missing from a locked dispensary cabinet at Monday's stock check. The clinic was closed over the weekend and the rear fire-exit door was found ajar. Documented from initial reports only — no conclusion is drawn.
+      - navigation [ref=f1e62]:
+        - link "01 Overview" [ref=f1e63] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c
+          - generic [ref=f1e64]: "01"
+          - text: Overview
+        - link "02 Evidence" [ref=f1e65] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/evidence
+          - generic [ref=f1e66]: "02"
+          - text: Evidence
+        - link "03 Timeline" [ref=f1e68] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/timeline
+          - generic [ref=f1e69]: "03"
+          - text: Timeline
+        - link "04 Scenarios" [ref=f1e70] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/scenarios
+          - generic [ref=f1e71]: "04"
+          - text: Scenarios
+        - link "05 Compare" [ref=f1e72] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/compare
+          - generic [ref=f1e73]: "05"
+          - text: Compare
+        - link "06 Visualization" [ref=f1e74] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/visualization
+          - generic [ref=f1e75]: "06"
+          - text: Visualization
+        - link "07 Audit" [ref=f1e76] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/audit
+          - generic [ref=f1e77]: "07"
+          - text: Audit
+      - generic [ref=f1e78]:
+        - generic [ref=f1e79]:
+          - generic [ref=f1e80]:
+            - heading "▸ Evidence items" [level=2] [ref=f1e81]
+            - generic [ref=f1e82]: 0 items
+          - generic [ref=f1e83]:
+            - paragraph [ref=f1e84]: No evidence logged in this case file.
+            - paragraph [ref=f1e85]: NO DATA
+        - generic [ref=f1e86]:
+          - heading "▸ Log evidence" [level=2] [ref=f1e87]
+          - generic [ref=f1e88]:
+            - generic [ref=f1e89]:
+              - generic [ref=f1e90]: Type
+              - combobox [ref=f1e91]:
+                - option "POST_MORTEM_REPORT"
+                - option "FORENSIC_REPORT"
+                - option "INVESTIGATOR_REPORT"
+                - option "WITNESS_STATEMENT"
+                - option "AUDIO"
+                - option "IMAGE"
+                - option "VIDEO"
+                - option "DOCUMENT" [selected]
+            - generic [ref=f1e92]:
+              - generic [ref=f1e93]: Title
+              - textbox "Post-mortem report…" [ref=f1e94]
+            - generic [ref=f1e95]:
+              - generic [ref=f1e96]: Text content
+              - textbox "Paste or describe the evidence…" [ref=f1e97]
+            - generic [ref=f1e98]:
+              - generic [ref=f1e99]: Or attach file
+              - button "Choose File" [ref=f1e100]
+            - button "Log evidence" [disabled] [ref=f1e101]
+          - paragraph [ref=f1e102]: After logging evidence, run analysis from Overview to extract facts, find constraints and generate scenario candidates.
+  - contentinfo [ref=f1e103]:
+    - generic [ref=f1e104]:
+      - generic [ref=f1e105]: BAKKE Command Interface
+      - generic [ref=f1e106]: Evidence Consistency Scores ≠ Probability
+      - generic [ref=f1e107]: Secure Channel
+  - alert [ref=f1e109]

@@ -1,0 +1,133 @@
+- generic [ref=f5e1]:
+  - banner [ref=f5e4]:
+    - generic [ref=f5e7]:
+      - link "Bakke Command Evidence-Constrained Intelligence" [ref=f5e8] [cursor=pointer]:
+        - /url: /
+        - img [ref=f5e10]:
+          - generic [ref=f5e13]: B
+        - generic [ref=f5e15]:
+          - generic [ref=f5e16]: Bakke Command
+          - generic [ref=f5e17]: Evidence-Constrained Intelligence
+      - navigation [ref=f5e18]:
+        - link "Command" [ref=f5e19] [cursor=pointer]:
+          - /url: /
+        - link "Case Board" [ref=f5e20] [cursor=pointer]:
+          - /url: /cases
+      - generic [ref=f5e22]:
+        - generic [ref=f5e23]: Dev Mock Mode
+        - generic [ref=f5e25]: 22:17:47Z
+        - generic [ref=f5e26]: STN-07
+  - generic [ref=f5e28]:
+    - generic [ref=f5e29]:
+      - generic [ref=f5e30]:
+        - generic [ref=f5e31]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=f5e32]:
+        - generic [ref=f5e33]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=f5e34]:
+        - generic [ref=f5e35]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=f5e36]:
+        - generic [ref=f5e37]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=f5e38]:
+        - generic [ref=f5e39]: ▸
+        - text: EVERY STEP IS AUDITED
+    - generic [ref=f5e40]:
+      - generic [ref=f5e41]:
+        - generic [ref=f5e42]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=f5e43]:
+        - generic [ref=f5e44]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=f5e45]:
+        - generic [ref=f5e46]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=f5e47]:
+        - generic [ref=f5e48]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=f5e49]:
+        - generic [ref=f5e50]: ▸
+        - text: EVERY STEP IS AUDITED
+  - main [ref=f5e51]:
+    - generic [ref=f5e52]:
+      - generic [ref=f5e53]:
+        - generic [ref=f5e54]:
+          - generic [ref=f5e55]: Case file
+          - generic [ref=f5e56]: "#f7209e22"
+          - heading "Missing tools" [level=1] [ref=f5e58]
+          - generic [ref=f5e59]: ANALYZED
+        - paragraph [ref=f5e61]: Hand tools were taken from a locked store on the night of 5 March. The store was locked at 18:05 and found open at 07:50 the next morning.
+      - navigation [ref=f5e62]:
+        - link "01 Overview" [ref=f5e63] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e
+          - generic [ref=f5e64]: "01"
+          - text: Overview
+        - link "02 Evidence" [ref=f5e65] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/evidence
+          - generic [ref=f5e66]: "02"
+          - text: Evidence
+        - link "03 Timeline" [ref=f5e67] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/timeline
+          - generic [ref=f5e68]: "03"
+          - text: Timeline
+        - link "04 Scenarios" [ref=f5e69] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/scenarios
+          - generic [ref=f5e70]: "04"
+          - text: Scenarios
+        - link "05 Compare" [ref=f5e71] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/compare
+          - generic [ref=f5e72]: "05"
+          - text: Compare
+        - link "06 Visualization" [ref=f5e74] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/visualization
+          - generic [ref=f5e75]: "06"
+          - text: Visualization
+        - link "07 Audit" [ref=f5e76] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/audit
+          - generic [ref=f5e77]: "07"
+          - text: Audit
+      - generic [ref=f5e78]:
+        - generic [ref=f5e79]:
+          - paragraph [ref=f5e80]: // scenario comparison
+          - heading "Compare Scenarios." [level=2] [ref=f5e81]
+          - paragraph [ref=f5e82]: Select 2–4 surviving scenarios to compare shared and differing evidence, and to identify evidence that could discriminate between them. Comparison is descriptive — not a ranking of truth.
+        - generic [ref=f5e94]:
+          - button "H-001 score 100 The gate was closed at 19:12, blocking any vehicle or person from entering after that time." [ref=f5e95] [cursor=pointer]:
+            - generic [ref=f5e96]:
+              - generic [ref=f5e98]: H-001
+              - generic [ref=f5e99]: score 100
+            - paragraph [ref=f5e100]: The gate was closed at 19:12, blocking any vehicle or person from entering after that time.
+          - button "H-002 score 100 Suresh, holding the padlock key, removed the padlock during his shift." [ref=f5e101] [cursor=pointer]:
+            - generic [ref=f5e102]:
+              - generic [ref=f5e104]: H-002
+              - generic [ref=f5e105]: score 100
+            - paragraph [ref=f5e106]: Suresh, holding the padlock key, removed the padlock during his shift.
+          - button "H-003 score 100 Ravi Menon, with his key on his ring, removed the padlock before closing the yard." [active] [ref=f5e107] [cursor=pointer]:
+            - generic [ref=f5e108]:
+              - generic [ref=f5e110]: H-003
+              - generic [ref=f5e111]: score 100
+            - paragraph [ref=f5e112]: Ravi Menon, with his key on his ring, removed the padlock before closing the yard.
+          - button "H-004 score 100 An unknown person entered the yard after 19:12 and removed the padlock." [ref=f5e113] [cursor=pointer]:
+            - generic [ref=f5e114]:
+              - generic [ref=f5e116]: H-004
+              - generic [ref=f5e117]: score 100
+            - paragraph [ref=f5e118]: An unknown person entered the yard after 19:12 and removed the padlock.
+          - button "H-005 score 100 The padlock was removed before Suresh’s shift began at 19:00." [ref=f5e119] [cursor=pointer]:
+            - generic [ref=f5e120]:
+              - generic [ref=f5e122]: H-005
+              - generic [ref=f5e123]: score 100
+            - paragraph [ref=f5e124]: The padlock was removed before Suresh’s shift began at 19:00.
+          - button "H-006 score 100 The padlock was taken during the 06:00 inventory check." [ref=f5e125] [cursor=pointer]:
+            - generic [ref=f5e126]:
+              - generic [ref=f5e128]: H-006
+              - generic [ref=f5e129]: score 100
+            - paragraph [ref=f5e130]: The padlock was taken during the 06:00 inventory check.
+        - button "Compare 2 scenarios" [ref=f5e133] [cursor=pointer]
+  - contentinfo [ref=f5e87]:
+    - generic [ref=f5e88]:
+      - generic [ref=f5e89]: BAKKE Command Interface
+      - generic [ref=f5e90]: Evidence Consistency Scores ≠ Probability
+      - generic [ref=f5e91]: Secure Channel
+  - alert [ref=f5e93]
