@@ -36,6 +36,22 @@ LLM_TASKS: dict[str, str] = {
     "summarize_scenario": "Produce a concise scenario summary.",
     "similar_case_relevance": "Identify relevant analogical patterns from retrieved similar cases.",
     "compare_scenarios": "Compare scenarios to surface shared and differing elements.",
+    "expand_video_prompt": (
+        "Rewrite a visual-only video generation prompt into a richer cinematic brief for a "
+        "text-to-video model. Expand terse directions with setting, surface, light, "
+        "atmosphere, camera and motion detail, and keep an explicit time range for every "
+        "shot. Keep every constraint, the shot order and the exact NOT RECORDED FOOTAGE "
+        "label. Add no facts, no evidence, no reasoning, no people, no new objects and no "
+        "actions the source does not already state."
+    ),
+    "build_visual_brief": (
+        "Reduce a validated scenario to what a camera can show: the actors, the objects with "
+        "their start and end states, the actions in the order they happen, and what stays "
+        "continuous. Copy the wording of the input for every actor name, object name and action "
+        "verb; a name or an action the input does not state is an invention and is rejected. An "
+        "absence (no vehicle entered) is not an action: it belongs in absences, never in beats. "
+        "Add no evidence, witness, score or reasoning text."
+    ),
 }
 
 

@@ -1,0 +1,120 @@
+- generic [ref=e1]:
+  - banner [ref=e4]:
+    - generic [ref=e7]:
+      - link "Bakke Command Evidence-Constrained Intelligence" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - img [ref=e10]:
+          - generic [ref=e13]: B
+        - generic [ref=e15]:
+          - generic [ref=e16]: Bakke Command
+          - generic [ref=e17]: Evidence-Constrained Intelligence
+      - navigation [ref=e18]:
+        - link "Command" [ref=e19] [cursor=pointer]:
+          - /url: /
+        - link "Case Board" [ref=e21] [cursor=pointer]:
+          - /url: /cases
+      - generic [ref=e22]:
+        - generic [ref=e23]: Dev Mock Mode
+        - generic [ref=e25]: 08:27:42Z
+        - generic [ref=e26]: STN-07
+  - generic [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=e32]:
+        - generic [ref=e33]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=e34]:
+        - generic [ref=e35]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=e36]:
+        - generic [ref=e37]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=e38]:
+        - generic [ref=e39]: ▸
+        - text: EVERY STEP IS AUDITED
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=e43]:
+        - generic [ref=e44]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=e45]:
+        - generic [ref=e46]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=e47]:
+        - generic [ref=e48]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=e49]:
+        - generic [ref=e50]: ▸
+        - text: EVERY STEP IS AUDITED
+  - main [ref=e51]:
+    - generic [ref=e178]:
+      - generic [ref=e179]:
+        - generic [ref=e180]:
+          - generic [ref=e181]: Case file
+          - generic [ref=e182]: "#79f7784a"
+          - heading "Clinic dispensary medication loss — 27 September" [level=1] [ref=e184]
+          - generic [ref=e185]: DRAFT
+        - paragraph [ref=e187]: Fictional worked example. Controlled medication was found missing from a locked dispensary cabinet at Monday's stock check. The clinic was closed over the weekend and the rear fire-exit door was found ajar. Documented from initial reports only — no conclusion is drawn.
+      - navigation [ref=e188]:
+        - link "01 Overview" [ref=e189] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c
+          - generic [ref=e190]: "01"
+          - text: Overview
+        - link "02 Evidence" [ref=e192] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/evidence
+          - generic [ref=e193]: "02"
+          - text: Evidence
+        - link "03 Timeline" [active] [ref=e194] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/timeline
+          - generic [ref=e195]: "03"
+          - text: Timeline
+        - link "04 Scenarios" [ref=e196] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/scenarios
+          - generic [ref=e197]: "04"
+          - text: Scenarios
+        - link "05 Compare" [ref=e198] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/compare
+          - generic [ref=e199]: "05"
+          - text: Compare
+        - link "06 Visualization" [ref=e200] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/visualization
+          - generic [ref=e201]: "06"
+          - text: Visualization
+        - link "07 Audit" [ref=e202] [cursor=pointer]:
+          - /url: /cases/79f7784a-ca68-48b4-8224-04604b8ba77c/audit
+          - generic [ref=e203]: "07"
+          - text: Audit
+      - generic [ref=e262]:
+        - generic [ref=e263]:
+          - generic [ref=e264]:
+            - heading "▸ Timeline" [level=2] [ref=e265]
+            - generic [ref=e266]: 0 events
+          - generic [ref=e267]:
+            - paragraph [ref=e268]: No timeline events extracted. Run analysis first.
+            - paragraph [ref=e269]: NO DATA
+        - generic [ref=e270]:
+          - generic [ref=e271]:
+            - heading "▸ Forensic anchors" [level=2] [ref=e272]
+            - generic [ref=e273]:
+              - paragraph [ref=e274]: No forensic anchors.
+              - paragraph [ref=e275]: NO DATA
+          - generic [ref=e276]:
+            - heading "▸ Conflicts" [level=2] [ref=e277]
+            - generic [ref=e278]:
+              - paragraph [ref=e279]: No evidence conflicts detected.
+              - paragraph [ref=e280]: NO DATA
+          - generic [ref=e281]:
+            - heading "▸ Constraints" [level=2] [ref=e282]
+            - generic [ref=e283]:
+              - paragraph [ref=e284]: No constraints derived.
+              - paragraph [ref=e285]: NO DATA
+  - contentinfo [ref=e105]:
+    - generic [ref=e106]:
+      - generic [ref=e107]: BAKKE Command Interface
+      - generic [ref=e108]: Evidence Consistency Scores ≠ Probability
+      - generic [ref=e109]: Secure Channel
+  - alert [ref=e176]

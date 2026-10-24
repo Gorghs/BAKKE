@@ -70,7 +70,7 @@ CAPABILITIES: dict[str, CapabilitySpec] = {
             type_keys=("LLM_PROVIDER_TYPE", "LLM_PROVIDER"),
             api_key_keys=("LLM_API_KEY", "OPENAI_API_KEY"),
             model_keys=("LLM_MODEL", "OPENAI_MODEL"),
-            base_url_keys=("LLM_API_BASE_URL",),
+            base_url_keys=("LLM_API_BASE_URL", "OPENAI_BASE_URL"),
             default_model="",
         ),
         CapabilitySpec(
@@ -115,7 +115,7 @@ CAPABILITIES: dict[str, CapabilitySpec] = {
             type_keys=("VIDEO_GENERATION_PROVIDER_TYPE", "VIDEO_GENERATION_PROVIDER"),
             api_key_keys=("VIDEO_GENERATION_API_KEY",),
             model_keys=("VIDEO_GENERATION_MODEL",),
-            base_url_keys=("VIDEO_GENERATION_API_BASE_URL",),
+            base_url_keys=("VIDEO_GENERATION_API_BASE_URL", "VIDEO_GENERATION_BASE_URL"),
             default_model="",
         ),
     ]
@@ -226,6 +226,31 @@ class Settings(BaseSettings):
     VIDEO_GENERATION_API_BASE_URL: str = ""
     VIDEO_GENERATION_API_KEY: str = ""
     VIDEO_GENERATION_MODEL: str = ""
+
+    # --- Provider HTTP behaviour (shared by the generic HTTP adapters) ------
+    # Cheap providers answer 429 / 5xx under load; riding those out is the
+    # difference between a slow run and a failed one. Retries cover 408/425/429
+    # and 5xx only — a 400 is a bad request, not a transient one.
+    LLM_MAX_RETRIES: int = 4
+    # Seconds between consecutive chat calls. Free tiers cap tokens per minute,
+    # and a pipeline that fires every extraction back to back trips them.
+    LLM_CALL_MIN_INTERVAL: float = 0.0
+    # 0 leaves max_tokens unset, which endpoints read as their own default
+    # (2048 on several), so a bounded call can still be cut off.
+    LLM_MAX_OUTPUT_TOKENS: int = 0
+    # Reasoning models (Groq gpt-oss) bill hidden reasoning to the same output
+    # budget: unset, a 900-token call comes back empty with finish_reason
+    # "length". "low" keeps the answer; "" omits the parameter entirely.
+    LLM_REASONING_EFFORT: str = ""
+    # Optional LLM rewrite of the visual prompt. Off keeps the director prompt,
+    # which names only what the scenario states. On adds cinematic prose but can
+    # describe fixtures and materials the scenario never states.
+    VIDEO_PROMPT_EXPANSION: bool = False
+    # Optional LLM-filled visual brief: setting, actors, props with their start and
+    # end state, ordered beats, continuity. Every label, action word and clock must
+    # already appear in the scenario text, or the brief is rejected and the
+    # deterministic extractor is used instead.
+    VIDEO_VISUAL_BRIEF: bool = True
 
     # --- Legacy names (compatibility only; see CAPABILITIES) ---------------
     LLM_PROVIDER: str = "mock"

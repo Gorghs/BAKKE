@@ -37,6 +37,7 @@ class ExtractEvidenceWorkflow:
         db = self.uow.session
         evidence_items = db.query(EvidenceItem).filter_by(case_id=case_id).all()
         extractions: list[tuple[EvidenceItem, Any]] = []
+        failures: list[tuple[EvidenceItem, Exception]] = []
         for ev in evidence_items:
             self._notify(f"Extracting evidence {ev.evidence_id}")
             agent = get_extractor_agent(ev.item_type)
@@ -64,9 +65,13 @@ class ExtractEvidenceWorkflow:
                     ev.evidence_id,
                     exc,
                 )
+                failures.append((ev, exc))
                 continue
             self.uow.evidence_status.mark_processed(ev.id, getattr(agent, "provider_label", ""))
             extractions.append((ev, result))
+        if failures and not extractions and evidence_items:
+            messages = "; ".join(f"{ev.evidence_id}: {exc}" for ev, exc in failures)
+            raise RuntimeError(f"extraction failed for all evidence items: {messages}")
         return extractions
 
     def fuse(self, case_id: str, extractions: list[tuple[EvidenceItem, Any]]) -> Any:

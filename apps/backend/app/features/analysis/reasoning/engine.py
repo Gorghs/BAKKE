@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -37,6 +38,49 @@ STATE_PENDING = "PENDING"
 STATE_VALIDATING = "VALIDATING"
 STATE_SURVIVING = "SURVIVING"
 STATE_REJECTED = "REJECTED"
+
+# Every rejection asks the generator for alternatives, so an uncapped pool grows
+# faster than validation can check it. Observed live on a five-item case: three
+# initial candidates became 52 rows, 26 of them never validated and most of the
+# rest rewordings of the same "misplaced key" idea. Cap what one round may add.
+MAX_EXPANSIONS_PER_ROUND = 4
+
+# Candidates created in the last round have no verdict when the iteration cap
+# stops the loop. A scenario with no verdict is neither a survivor nor a
+# rejection, so the tail gets one validation pass, with expansion off.
+MAX_LEFTOVER_VALIDATIONS = 12
+
+# Words that carry no explanation on their own, dropped before two candidate
+# titles are compared.
+_TITLE_FILLER_WORDS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "as",
+        "at",
+        "before",
+        "by",
+        "during",
+        "for",
+        "from",
+        "his",
+        "her",
+        "in",
+        "into",
+        "is",
+        "its",
+        "of",
+        "on",
+        "or",
+        "the",
+        "their",
+        "to",
+        "was",
+        "were",
+        "with",
+    }
+)
 
 
 class ReasoningResult:
@@ -184,11 +228,12 @@ class ReasoningEngine:
 
             # ---- Hypothesis expansion from failed candidates ----
             if new_candidates:
-                result.expansions += len(new_candidates)
-                for origin, hd in new_candidates:
+                fresh = self._novel_candidates(db, case_id, new_candidates)
+                for origin, hd in fresh:
                     hyp = self._create_hypothesis(db, case_id, hd, origin=origin)
                     _persist_scenario(db, case_id, hyp, hd)
                     result.total_generated += 1
+                result.expansions += len(fresh)
 
             # Stopping: no new pending after this round and no expansion candidates.
             remaining_pending = self._count_pending(db, case_id)
@@ -198,6 +243,18 @@ class ReasoningEngine:
             if iteration >= settings.MAX_REASONING_ITERATIONS:
                 result.stopped_reason = "max iterations safety limit reached"
                 break
+
+        # ---- Leftover validation ----
+        # The loop stops at the iteration cap, not when the pool empties, so the
+        # candidates added in the last round never reached a verdict. Validate
+        # them once with expansion off, so no row stays PENDING and every
+        # hypothesis on the dashboard carries either a survival or a reason.
+        leftover = self._load_pending(db, case_id, anchors)
+        budget = min(len(leftover), MAX_LEFTOVER_VALIDATIONS)
+        for sc_dict in leftover[:budget]:
+            self._validate(db, case_id, sc_dict, fact_by_id, result, [])
+        if budget:
+            result.stopped_reason = f"{result.stopped_reason} (tail validated: {budget})"
 
         # ---- Deduplicate survivors ----
         survivors = self._load_survivors(db, case_id, anchors)
@@ -246,6 +303,38 @@ class ReasoningEngine:
         db.add(hyp)
         db.flush()
         return hyp
+
+    @staticmethod
+    def _title_signature(title: str) -> str:
+        """Comparison key for "is this a new explanation or the same one again".
+
+        Two candidates that differ only in word order or filler words ("Key
+        misplaced by night guard" / "Night guard misplaced the key") are one
+        candidate, and the live run counted them as two. Word order is ignored
+        and filler words are dropped; a different actor or mechanism still
+        produces a different key.
+        """
+        words = re.findall(r"[a-z0-9]+", str(title or "").lower())
+        return " ".join(sorted(word for word in words if word not in _TITLE_FILLER_WORDS))
+
+    def _novel_candidates(
+        self,
+        db: Session,
+        case_id: str,
+        candidates: list[tuple[str, HypothesisDraft]],
+    ) -> list[tuple[str, HypothesisDraft]]:
+        """Keep the expansions that are new explanations, up to the round cap."""
+        seen = {self._title_signature(row[0]) for row in db.query(Hypothesis.title).filter_by(case_id=case_id)}
+        fresh: list[tuple[str, HypothesisDraft]] = []
+        for origin, hd in candidates:
+            signature = self._title_signature(hd.title)
+            if not signature or signature in seen:
+                continue
+            seen.add(signature)
+            fresh.append((origin, hd))
+            if len(fresh) >= MAX_EXPANSIONS_PER_ROUND:
+                break
+        return fresh
 
     def _load_pending(self, db: Session, case_id: str, anchors: list[ForensicAnchor]) -> list[dict[str, Any]]:
         out = []
@@ -413,7 +502,7 @@ class ReasoningEngine:
         )
         # Expansion: a failed hypothesis may reveal new valid possibilities.
         if violations and not suppressed:
-            expansion = self.generator.expand(db, case_id, sc_dict)
+            expansion = self.generator.expand(db, case_id, sc_dict, reason)
             if expansion.hypotheses:
                 for hd in expansion.hypotheses:
                     hd.origin = "EXPANSION"

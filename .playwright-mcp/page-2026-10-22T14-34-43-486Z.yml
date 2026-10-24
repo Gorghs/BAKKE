@@ -1,0 +1,141 @@
+- generic [ref=e1]:
+  - banner [ref=e4]:
+    - generic [ref=e7]:
+      - link "Bakke Command Evidence-Constrained Intelligence" [ref=e8] [cursor=pointer]:
+        - /url: /
+        - img [ref=e10]:
+          - generic [ref=e13]: B
+        - generic [ref=e15]:
+          - generic [ref=e16]: Bakke Command
+          - generic [ref=e17]: Evidence-Constrained Intelligence
+      - navigation [ref=e18]:
+        - link "Command" [ref=e19] [cursor=pointer]:
+          - /url: /
+        - link "Case Board" [ref=e21] [cursor=pointer]:
+          - /url: /cases
+      - generic [ref=e22]:
+        - generic [ref=e23]: Dev Mock Mode
+        - generic [ref=e25]: 20:04:43Z
+        - generic [ref=e26]: STN-07
+  - generic [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=e32]:
+        - generic [ref=e33]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=e34]:
+        - generic [ref=e35]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=e36]:
+        - generic [ref=e37]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=e38]:
+        - generic [ref=e39]: ▸
+        - text: EVERY STEP IS AUDITED
+    - generic [ref=e40]:
+      - generic [ref=e41]:
+        - generic [ref=e42]: ▸
+        - text: BAKKE NEVER DETERMINES WHAT HAPPENED
+      - generic [ref=e43]:
+        - generic [ref=e44]: ▸
+        - text: SCORES ARE EVIDENCE CONSISTENCY ONLY — NOT PROBABILITY
+      - generic [ref=e45]:
+        - generic [ref=e46]: ▸
+        - text: SIMILAR CASES ARE REFERENCE ONLY — NEVER INJECTED AS FACT
+      - generic [ref=e47]:
+        - generic [ref=e48]: ▸
+        - text: VIDEOS ARE 3D ANIMATED RECONSTRUCTIONS — NOT RECORDED FOOTAGE
+      - generic [ref=e49]:
+        - generic [ref=e50]: ▸
+        - text: EVERY STEP IS AUDITED
+  - main [ref=e51]:
+    - generic [ref=e217]:
+      - generic [ref=e218]:
+        - generic [ref=e219]:
+          - generic [ref=e220]: Case file
+          - generic [ref=e221]: "#f7209e22"
+          - heading "Missing tools" [level=1] [ref=e223]
+          - generic [ref=e224]: DRAFT
+        - paragraph [ref=e226]: Hand tools were taken from a locked store on the night of 5 March. The store was locked at 18:05 and found open at 07:50 the next morning.
+      - navigation [ref=e227]:
+        - link "01 Overview" [active] [ref=e228] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e
+          - generic [ref=e229]: "01"
+          - text: Overview
+        - link "02 Evidence" [ref=e231] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/evidence
+          - generic [ref=e232]: "02"
+          - text: Evidence
+        - link "03 Timeline" [ref=e233] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/timeline
+          - generic [ref=e234]: "03"
+          - text: Timeline
+        - link "04 Scenarios" [ref=e235] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/scenarios
+          - generic [ref=e236]: "04"
+          - text: Scenarios
+        - link "05 Compare" [ref=e237] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/compare
+          - generic [ref=e238]: "05"
+          - text: Compare
+        - link "06 Visualization" [ref=e239] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/visualization
+          - generic [ref=e240]: "06"
+          - text: Visualization
+        - link "07 Audit" [ref=e241] [cursor=pointer]:
+          - /url: /cases/f7209e22-d830-4bf4-8a1f-f7aec9d66d1e/audit
+          - generic [ref=e242]: "07"
+          - text: Audit
+      - generic [ref=e388]:
+        - generic [ref=e389]:
+          - generic [ref=e391]:
+            - generic [ref=e392]: "5"
+            - generic [ref=e393]: Evidence
+          - generic [ref=e395]:
+            - generic [ref=e396]: "0"
+            - generic [ref=e397]: Facts extracted
+          - generic [ref=e399]:
+            - generic [ref=e400]: "0"
+            - generic [ref=e401]: Timeline events
+          - generic [ref=e403]:
+            - generic [ref=e404]: "0"
+            - generic [ref=e405]: Constraints
+          - generic [ref=e407]:
+            - generic [ref=e408]: "0"
+            - generic [ref=e409]: Hard constraints
+          - generic [ref=e411]:
+            - generic [ref=e412]: "0"
+            - generic [ref=e413]: Conflicts
+          - generic [ref=e415]:
+            - generic [ref=e416]: "0"
+            - generic [ref=e417]: Forensic anchors
+          - generic [ref=e419]:
+            - generic [ref=e420]: "0"
+            - generic [ref=e421]: Surviving scenarios
+          - generic [ref=e423]:
+            - generic [ref=e424]: "0"
+            - generic [ref=e425]: Rejected scenarios
+          - generic [ref=e427]:
+            - generic [ref=e428]: "0"
+            - generic [ref=e429]: Similar cases
+          - generic [ref=e431]:
+            - generic [ref=e432]: "0"
+            - generic [ref=e433]: Unknown areas
+          - generic [ref=e435]:
+            - generic [ref=e436]: "0"
+            - generic [ref=e437]: Videos
+        - generic [ref=e438]:
+          - generic [ref=e439]:
+            - generic [ref=e440]:
+              - text: Analysis not complete
+              - generic [ref=e441]: DRAFT
+            - paragraph [ref=e443]: Run extraction, fusion, iterative reasoning and scoring.
+          - button "Analyze case" [ref=e444] [cursor=pointer]
+  - contentinfo [ref=e105]:
+    - generic [ref=e106]:
+      - generic [ref=e107]: BAKKE Command Interface
+      - generic [ref=e108]: Evidence Consistency Scores ≠ Probability
+      - generic [ref=e109]: Secure Channel
+  - alert [ref=e111]

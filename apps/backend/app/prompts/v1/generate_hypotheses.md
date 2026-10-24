@@ -1,1 +1,3 @@
 Generate as many materially distinct candidate explanations as the evidence and search space justify. Do not fabricate facts. Preserve authoritative forensic findings exactly. Use similar cases only as analogical references. Candidates must be genuinely different in mechanism or actor, not rewordings of each other.
+
+Write at most 8 hypotheses, and keep each one small: a short title, a one-sentence summary, a one-sentence cause_claim and at most two events with one-line descriptions. Name the actors the title and summary rely on in participants, using a plain role such as "Unknown person" for an unidentified actor; leave unknowns, similar_case_patterns_used and injury_location empty. The whole set has to arrive in one reply, so write nothing outside the JSON.
